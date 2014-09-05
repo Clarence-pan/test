@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Syntax Highlighter</title>
+    <script type='text/javascript' src='js/jquery.js'></script>
+    <script type='text/javascript' src='js/jquery.autocomplete.js'></script>
+    <script type="text/javascript" src="scripts/shCore.js"></script>
+    <script type="text/javascript" src="scripts/shBrushJScript.js"></script>
+    <link type="text/css" rel="stylesheet" href="styles/shCoreDefault.css">
+    <style type="text/css">
+        textarea {
+            width: 100%;
+            min-height: 200px;
+        }
+        div #err{
+            z-index: 0;
+            color: red;
+            background-color: lightyellow;
+        }
+    </style>
+    <script type="text/javascript">
+        function render(){
+            var p = document.createElement('pre');
+            p.innerHTML = $(input_val).val();
+            p.className = "brush: " + $(select_brush).val() + ";";
+            output.innerText="";
+            output.appendChild(p);
+            //$(p).html($(input_val).val());
+            SyntaxHighlighter.highlight({}, p);
+        }
+    </script>
+</head>
+<body>
+<form target="#output">
+    <span>Brush type: </span>
+    <select id="select_brush" onchange="javascript:render();"> </select>
+    <input type="button" onclick="javascript:render();" value="Highlight" />
+    <textarea id="input_val" onchange="javascript:render();"></textarea>
+    <div id="output">
+
+    </div>
+</form>
+<script type="text/javascript">
+    (function(){
+        var brushes = ["js", "jscript", "javascript", "as3", "actionscript3", "bash", "shell", "cf", "coldfusion", "c-sharp", "csharp", "cpp", "c", "css", "delphi", "pas", "pascal", "diff", "patch", "erl", "erlang", "groovy", "java", "jfx", "javafx", "perl", "pl", "php", "plain", "text", "ps", "powershell", "py", "python", "rails", "ror", "ruby", "scala", "sql", "vb", "vbnet", "xml", "xhtml", "xslt", "html", "xhtml"];
+        var h = ""
+        for (b in brushes){
+            var o = new Option();
+            o.value = brushes[b];o.text = brushes[b];
+            $(select_brush).append(o);
+        }
+    })();
+</script>
+</body>
+</html>
