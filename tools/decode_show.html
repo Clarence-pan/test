@@ -9,10 +9,20 @@
     <script type="text/javascript">SyntaxHighlighter.all();</script>
 
     <style type="text/css">
+        table {
+            width: 100%;
+        }
+        tr {
+            width: 100%;
+        }
+        td {
+            width: 50%;
+        }
         textarea {
             width: 100%;
             min-height: 200px;
         }
+
         div #err{
             z-index: 0;
             color: red;
@@ -26,19 +36,49 @@
     <body>
         <div id="ta">
             <h3>Base64解密-JSON解析</h3>
-
             <div>
                 <input type="button" value="Base64解密 & ShowJSON" id="test1" onclick="format();" />
                 <input type="button" value="Base64解密" id="test2" onclick="decode64()" />
                 <input type="button" value="Base64加密" id="test2" onclick="encode64()" />
                 <input type="hidden" value="测试" id="22" onclick="decode()" />
+                <input type="button" value="Copy OUTPUT" onclick="do_copy_output()" />
+                <input type="button" value="Swap INPUT <-> OUTPUT" onclick="do_swap()" />
             </div>
             <div id="err"></div>
         </div>
-        <textarea id="input_value"  onchange="javascript:on_input_value_change();" placeholder="input base64 or url"></textarea>
+        <table>
+            <thead>
+                <tr><td>Input</td><td>Output</td></tr>
+            </thead>
+            <tr>
+                <td>
+                    <textarea id="input_value"  onchange="javascript:on_input_value_change();" placeholder="input base64 or url"></textarea>
+                </td>
+                <td>
+                    <textarea id="output_value"  readonly="readonly" placeholder="output base64 or url"></textarea>
+                </td>
+            </tr>
+        </table>
+
+        <div>
+            <input type="text" id="goto_url" name="goto_url" style="width: 100%" />
+            <input type="button" value="GOTO URL(GET, Using base64 as GET param)" onclick="goto_url_get()"/>
+        </div>
         <div id="log"></div>
    
 <script type="text/javascript" >
+    function do_copy_output(){
+        clipboardData.clearData();
+        clipboardData.setData('text', $(output_value).val());
+    }
+    function do_swap(){
+        var t = $(input_value).val();
+        $(input_value).val($(output_value).val());
+        $(output_value).val(t);
+    }
+    function goto_url_get(){
+        window.open($(goto_url).val() + "?" + window.last_base64_result, "_blank");
+    }
     function on_input_value_change(){
         if ($(input_value).val()[0] != '{'){
             format();
@@ -60,16 +100,49 @@
             setTimeout(function(){$(err).fadeOut()}, 2000);
         }
     }
-    function output(result){
-    	$(log).prepend(result);
+    function output(convertion, json, base64){
+        if (!json && !base64){
+            json = convertion['json'];
+            base64 = convertion['base64'];
+            convertion = convertion['convertion'];
+        }
+        window.last_base64_result = base64;
+        var base64_p = document.createElement('p');
+        base64_p.innerText = "BASE64: " + base64;
+    	$(log).prepend(base64_p);
+        var json_title = document.createElement('p');
+        json_title.innerText = "JSON:";
+        var json_pre = document.createElement('pre');
+        json_pre.className = "brush: js;";
+        json_pre.innerHTML = json;
+        $(log).prepend(json_pre);
+        $(log).prepend(json_title);
+        SyntaxHighlighter.highlight({}, json_pre);
+        var goto_url_a = document.createElement("a");
+        goto_url_a.innerText = goto_url_a.href = $(goto_url).val() + "?" + base64;
+        goto_url_a.target = "_blank";
+        $(log).prepend(goto_url_a);
+        var convertion_p = document.createElement('h3');
+        convertion_p.innerText = convertion;
+        $(log).prepend(convertion_p);
+        $(log).prepend(document.createElement("hr"));
+        if (convertion == "BASE64 ENCODE"){
+            $(output_value).val(base64);
+        } else {
+            $(output_value).val(json);
+        }
     }
 	function decode64(){
 		var result = Base64.decode($('#input_value').val());
-		output("<p>" + result + " <br/> FROM BASE64: " + $('#input_value').val() + "</p>");
+		output({ 'convertion': "BASE64 DECODE",
+                'json': result,
+                'base64': $('#input_value').val() });
 	}
 	function encode64(){
 		var result = Base64.encode($('#input_value').val());
-        output("<p>" + $('#input_value').val() + " <br/> TO BASE64: " + result + "</p>");
+        output({ 'convertion': "BASE64 ENCODE",
+            'json': $('#input_value').val(),
+            'base64': result });
 	
 	}
 	function format(){
@@ -77,14 +150,9 @@
         var input =  (rawInput.indexOf('?') > 0) ? rawInput.substring(rawInput.indexOf('?') + 1) : rawInput;
 		var result = Base64.decode(input);
         var val = formatJson(result);
-        window.json_id += 1;
-        var t = document.createElement('p');        t.innerText = "BASE64: " + rawInput;
-        output(t);
-        t = document.createElement('p');        t.innerText = "JSON:";
-        var p = document.createElement('pre');  p.className = "brush: js;"; p.innerHTML = val;
-        output(p);
-        output(t);
-        SyntaxHighlighter.highlight({}, p);
+        output({ 'convertion': "BASE64 DECODE TO JSON",
+            'json': result,
+            'base64':  $('#input_value').val()});
 	}
 	
 	function repeat(s, count) {
