@@ -19,6 +19,9 @@
         <div id="result">
             <?php
             function my_eval($code){
+                if (!strstr($code, 'return') && !strstr($code, "\n")){
+                    $code = 'return ' . $code;
+                }
                 $filename = "eval-code.php";
                 $file = fopen($filename, "wt");
                 fwrite($file, '<?PHP ' . $code);
