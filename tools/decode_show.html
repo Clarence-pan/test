@@ -19,7 +19,9 @@
             background-color: lightyellow;
         }
     </style>
-	<script type="text/javascript" src="http://img1.tuniucdn.com/u/js/jquery-1.4.2.min.js"></script>
+	
+    <script type='text/javascript' src='js/jquery.js'></script>
+    <script type='text/javascript' src='js/jquery.autocomplete.js'></script>
     </head>
     <body>
         <div id="ta">
@@ -33,14 +35,19 @@
             </div>
             <div id="err"></div>
         </div>
-        <textarea id="input_value"  onchange="javascript:format();" placeholder="input base64 or url"></textarea>
+        <textarea id="input_value"  onchange="javascript:on_input_value_change();" placeholder="input base64 or url"></textarea>
         <div id="log"></div>
-    <script type='text/javascript' src='js/jquery.js'></script>
-    <script type='text/javascript' src='js/jquery.autocomplete.js'></script>
    
 <script type="text/javascript" >
+    function on_input_value_change(){
+        if ($(input_value).val()[0] != '{'){
+            format();
+        } else {
+            encode64();
+        }
+    }
     function adjust_input_size(){
-        $(input_value).height($(window).height()  - $(ta).height() - 50);
+        //$(input_value).height($(window).height()  - $(ta).height() - 50);
     }
     (function(){
         window.onresize = adjust_input_size;
@@ -53,14 +60,16 @@
             setTimeout(function(){$(err).fadeOut()}, 2000);
         }
     }
+    function output(result){
+    	$(log).prepend(result);
+    }
 	function decode64(){
 		var result = Base64.decode($('#input_value').val());
-		$('#input_value').val(result);
-	
+		output("<p>" + result + " <br/> FROM BASE64: " + $('#input_value').val() + "</p>");
 	}
 	function encode64(){
 		var result = Base64.encode($('#input_value').val());
-		$('#input_value').val(result);
+        output("<p>" + $('#input_value').val() + " <br/> TO BASE64: " + result + "</p>");
 	
 	}
 	function format(){
@@ -70,14 +79,12 @@
         var val = formatJson(result);
         window.json_id += 1;
         var t = document.createElement('p');        t.innerText = "BASE64: " + rawInput;
-        $(log).prepend(t);
+        output(t);
         t = document.createElement('p');        t.innerText = "JSON:";
         var p = document.createElement('pre');  p.className = "brush: js;"; p.innerHTML = val;
-        $(log).prepend(p);
-        $(log).prepend(t);
-        $(log).show();
+        output(p);
+        output(t);
         SyntaxHighlighter.highlight({}, p);
-		$('#input_value').val(val);
 	}
 	
 	function repeat(s, count) {
