@@ -7,7 +7,7 @@
 // CWebApplication properties can be configured here.
 return array(
 	'basePath'=>dirname(__FILE__).DIRECTORY_SEPARATOR.'..',
-	'name'=>'My Web Application',
+	'name'=>'Test',
 
 	// preloading 'log' component
 	'preload'=>array('log'),
@@ -48,6 +48,16 @@ return array(
 			),
 		),
 		//*/
+        'bbdb' =>  array(
+            'connectionString' => 'mysql:host=127.0.0.1;dbname=buckbeek;port=3306',
+            'username' => 'root',
+            'password' => '',
+            'class' => 'CDbConnection',
+            'charset' => 'utf8',
+            'enableProfiling' => YII_DEBUG,
+            'enableParamLogging' => YII_DEBUG,
+            'autoConnect' => false
+        ),
 		'db'=>array(
 			'connectionString' => 'sqlite:'.dirname(__FILE__).'/../data/testdrive.db',
 		),

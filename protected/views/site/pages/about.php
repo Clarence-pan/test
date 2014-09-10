@@ -1,3 +1,5 @@
+<?= 'Just for tests...' ?>
+<?php return ''; ?>
 <?php
 $this->pageTitle=Yii::app()->name . ' - About';
 $this->breadcrumbs=array(
