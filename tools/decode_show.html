@@ -89,11 +89,16 @@ function copyToClipboard(text) {
         clipboardHelper.copyString(text);
     }
 }
+function last_line(text){
+    var lines = text.split("\n");
+    return lines[lines.length - 1];
+}
 function do_get_and_parse(){
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function(){
         if (xhttp.readyState == 4 && xhttp.status == 200){
             var input = xhttp.responseText;
+            input = last_line(input);
             var result = Base64.decode(input);
             result = formatJson(result);
             var original_base64 = window.last_base64_result;
