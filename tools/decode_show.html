@@ -182,6 +182,7 @@ function decode64() {
 }
 function encode64() {
     var result = Base64.encode($('#input_value').val());
+    formatJson($('#input_value').val());
     output({ 'convertion': "BASE64 ENCODE",
         'json': $('#input_value').val(),
         'base64': result });
