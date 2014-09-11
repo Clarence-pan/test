@@ -32,6 +32,9 @@
             color: red;
             background-color: lightyellow;
         }
+        select {
+            width: 100%;
+        }
     </style>
 
     <script type='text/javascript' src='js/jquery.js'></script>
@@ -71,13 +74,34 @@
 
 <div>
     <input type="text" id="goto_url" name="goto_url" style="width: 100%"
-           value="http://bb.test.tuniu.org/bb/public/cps/cpsshowreport"/>
+           value="http://bb.test.tuniu.org/bb/public/cps/cpsshowreport" onchange="on_goto_url_change()" />
+    <select id="goto_url_select" name="goto_url_select" onchange="javascirpt:on_goto_url_selection_change()">
+        <option value="http://bb.test.tuniu.org/bb/public/cps/cpsshowreport">http://bb.test.tuniu.org/bb/public/cps/cpsshowreport</option>
+        <option value="http://hg.test.tuniu.org/hg/cps/cpsshowreport">http://hg.test.tuniu.org/hg/cps/cpsshowreport</option>
+    </select>
     <input type="button" value="GOTO URL(GET, Using base64 as GET param)" onclick="goto_url_get()"/>
     <input type="button" value="DO GET & PARSE" onclick="do_get_and_parse()" />
 </div>
 <div id="log"></div>
 
 <script type="text/javascript">
+function on_goto_url_change(){
+    var url = $(goto_url).val();
+    for (var opt_index in goto_url_select.options) {
+        var opt = goto_url_select.options[opt_index];
+        if (opt.value == url){
+            return;
+        }
+    }
+    var new_opt = document.createElement('option');
+    new_opt.value = url;
+    new_opt.innerText = url;
+    new_opt.selected = true;
+    goto_url_select.add(new_opt);
+}
+function on_goto_url_selection_change(){
+    $(goto_url).val($(goto_url_select).val());
+}
 function copyToClipboard(text) {
     if (window.clipboardData) // IE
     {
