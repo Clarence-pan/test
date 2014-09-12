@@ -23,24 +23,37 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="BbTestController.php" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/protected/controllers/BbTestController.php">
+      <file leaf-file-name="CVarDumper.php" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/plib/dump/CVarDumper.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="29" column="41" selection-start="1386" selection-end="1386" vertical-scroll-proportion="-10.357142" vertical-offset="166" max-vertical-offset="988">
-              <folding>
-                <element signature="e#7#91#0" expanded="false" />
-                <marker date="1410254548320" expanded="true" signature="235:442" placeholder="INSERT INTO ..." />
-                <marker date="1410254548320" expanded="true" signature="491:765" placeholder="INSERT INTO ..." />
-                <marker date="1410254548320" expanded="true" signature="864:1158" placeholder="INSERT INTO ..." />
-              </folding>
+            <state line="29" column="28" selection-start="840" selection-end="840" vertical-scroll-proportion="0.5091352" vertical-offset="0" max-vertical-offset="3078">
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="decode_show.html" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/tools/decode_show.html">
+      <file leaf-file-name="dump.php" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/plib/dump/dump.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="73" column="37" selection-start="2758" selection-end="2758" vertical-scroll-proportion="0.72066325" vertical-offset="822" max-vertical-offset="7657">
+            <state line="3" column="14" selection-start="83" selection-end="83" vertical-scroll-proportion="-2.0357144" vertical-offset="0" max-vertical-offset="836">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="index.php" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/index.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="14" column="0" selection-start="502" selection-end="502" vertical-scroll-proportion="-9.5" vertical-offset="0" max-vertical-offset="380">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="common.inc.php" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/protected/common.inc.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="8" column="0" selection-start="129" selection-end="129" vertical-scroll-proportion="-5.428571" vertical-offset="0" max-vertical-offset="266">
               <folding />
             </state>
           </provider>
@@ -58,7 +71,6 @@
       <list>
         <option value="$PROJECT_DIR$/protected/controllers/TestController.php" />
         <option value="$PROJECT_DIR$/main.php" />
-        <option value="$PROJECT_DIR$/protected/common.inc.php" />
         <option value="$PROJECT_DIR$/protected/views/site/contact.php" />
         <option value="$PROJECT_DIR$/protected/views/site/error.php" />
         <option value="$PROJECT_DIR$/protected/views/site/login.php" />
@@ -69,6 +81,8 @@
         <option value="$PROJECT_DIR$/request.html" />
         <option value="$PROJECT_DIR$/protected/config/main.php" />
         <option value="$PROJECT_DIR$/protected/controllers/BbTestController.php" />
+        <option value="$PROJECT_DIR$/plib/dump/dump.php" />
+        <option value="$PROJECT_DIR$/protected/common.inc.php" />
         <option value="$PROJECT_DIR$/tools/decode_show.html" />
       </list>
     </option>
@@ -88,7 +102,7 @@
     <option name="x" value="-8" />
     <option name="y" value="-8" />
     <option name="width" value="1296" />
-    <option name="height" value="1010" />
+    <option name="height" value="1009" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -116,6 +130,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -206,29 +221,11 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="protected" />
+              <option name="myItemId" value="plib" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="controllers" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="test" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="test" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="protected" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="config" />
+              <option name="myItemId" value="dump" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -248,7 +245,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -271,11 +267,11 @@
     <configuration default="true" type="PhpWebAppRunConfigurationType" factoryName="PHP Web Application">
       <method />
     </configuration>
-    <configuration default="true" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug">
-      <method />
-    </configuration>
     <configuration default="true" type="PhpHttpRequestRunConfigurationType" factoryName="PHP HTTP Request" server_name="local">
       <HttpRequestSettings request_method="POST" />
+      <method />
+    </configuration>
+    <configuration default="true" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug">
       <method />
     </configuration>
     <configuration default="true" type="PhpLocalRunConfigurationType" factoryName="PHP Console">
@@ -346,7 +342,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1296" height="1010" extended-state="6" />
+    <frame x="-8" y="-8" width="1296" height="1009" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -354,7 +350,7 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3295325" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2536349" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18093699" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2657512" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3990878" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -413,16 +409,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/index-test.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/protected/controllers/SiteController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/protected/controllers/TestController.php">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="0" />
@@ -514,11 +500,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../buckbeek-test/index.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/protected/common.inc.php">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="0" />
       </provider>
@@ -650,13 +631,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/index.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="0" selection-start="502" selection-end="502" vertical-scroll-proportion="-9.5" vertical-offset="0" max-vertical-offset="380">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/request.html">
       <provider selected="true" editor-type-id="text-editor">
         <state line="72" column="13" selection-start="2632" selection-end="2632" vertical-scroll-proportion="0.0" vertical-offset="1368" max-vertical-offset="1900" />
@@ -664,19 +638,46 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/protected/controllers/BbTestController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="29" column="41" selection-start="1386" selection-end="1386" vertical-scroll-proportion="-10.357142" vertical-offset="166" max-vertical-offset="988">
+        <state line="29" column="41" selection-start="1386" selection-end="1386" vertical-scroll-proportion="0.35200974" vertical-offset="262" max-vertical-offset="1083">
           <folding>
-            <element signature="e#7#91#0" expanded="false" />
-            <marker date="1410254548320" expanded="true" signature="235:442" placeholder="INSERT INTO ..." />
-            <marker date="1410254548320" expanded="true" signature="491:765" placeholder="INSERT INTO ..." />
-            <marker date="1410254548320" expanded="true" signature="864:1158" placeholder="INSERT INTO ..." />
+            <marker date="1410254548320" expanded="true" signature="-1:-1" placeholder="INSERT INTO ..." />
+            <marker date="1410254548320" expanded="true" signature="-1:-1" placeholder="INSERT INTO ..." />
+            <marker date="1410254548320" expanded="true" signature="-1:-1" placeholder="INSERT INTO ..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plib/dump/dump.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="14" selection-start="83" selection-end="83" vertical-scroll-proportion="-2.0357144" vertical-offset="0" max-vertical-offset="836">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/protected/common.inc.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="8" column="0" selection-start="129" selection-end="129" vertical-scroll-proportion="-5.428571" vertical-offset="0" max-vertical-offset="266">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="0" selection-start="502" selection-end="502" vertical-scroll-proportion="-9.5" vertical-offset="0" max-vertical-offset="380">
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/decode_show.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="73" column="37" selection-start="2758" selection-end="2758" vertical-scroll-proportion="0.72066325" vertical-offset="822" max-vertical-offset="7657">
+        <state line="97" column="37" selection-start="3285" selection-end="3285" vertical-scroll-proportion="0.44678217" vertical-offset="1482" max-vertical-offset="11609">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plib/dump/CVarDumper.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="29" column="28" selection-start="840" selection-end="840" vertical-scroll-proportion="0.5091352" vertical-offset="0" max-vertical-offset="3078">
           <folding />
         </state>
       </provider>

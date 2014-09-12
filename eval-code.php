@@ -1,1 +1,1 @@
-<?PHP return date("Y-m-d H:i:s", strtotime("now") - $j * 60 * 60 * 24);
+<?PHP return ord('%');

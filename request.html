@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" >
+        function calc_averange(data){
+            var sum = 0;
+            for (var i = 0; i < data.length; i++){
+                sum += data[i];
+            }
+            return sum / data.length;
+        }
+        function min(data){
+            var m = 9999999;
+            for (var i = 0; i < data.length; i++){
+                m = data[i] < m ? data[i] : m;
+            }
+            return m;
+        }
+        function max(data){
+            var m = 0;
+            for (var i = 0; i < data.length; i++){
+                m = data[i] > m ? data[i] : m;
+            }
+            return m;
+        }
+        function reportProcess(msg){
+            if (append.checked){
+                process_indicator.innerHTML += msg + "<br/>";
+            } else {
+                process_indicator.innerHTML = msg + "<br/>";
+            }
+
+        }
+        function reportResult(msg){
+            result.innerHTML += msg + "<br/>";
+        }
+        function onRequestReadyStateChange(evt){
+            var xhttp = evt.currentTarget;
+            var cookie = evt.currentTarget.cookie;
+            var i = cookie['i'];
+            var count = cookie['count'];
+            var start = cookie['start'];
+            reportProcess("Received request[" + i + '] status: ' + xhttp.status + " readyState: " + xhttp.readyState +
+                    " text: " + xhttp.responseText);
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+                var end = new Date();
+                var delta = (end - start);
+                deltas.push(delta);
+                reportResult('[' + i + "] +" + delta + "(ms) : " + xhttp.responseText);
+                if (deltas.length == count) {
+                    reportResult(" Averange: " + calc_averange(deltas) + "(ms) " +
+                            " Min: " + min(deltas) + "(ms) " +
+                            " Max: " + max(deltas) + "(ms)");
+                    reportProcess("ALL requests completed.");
+                }
+            }
+
+        }
+        function doRequest() {
+            window.deltas = [];
+            for (var i = 0; i < count.value; i++) {
+                reportProcess("Make request[" + i + ']...');
+                var xhttp = new XMLHttpRequest();
+                var start = new Date();
+                xhttp.cookie = {'i': i, 'count': count.value, 'start': start };
+                xhttp.onreadystatechange = onRequestReadyStateChange;
+                xhttp.open(method.value, url.value, sync.checked);
+                xhttp.send();
+
+            }
+        }
+    </script>
+</head>
+<body>
+    <form action="#">
+        URL: <input type="text" name="url" id="url" width="100%" style="width:100%" /> <br/>
+        COUNT: <input type="text" name="count" id="count" value="20" />
+        METHOD: <select id="method" name="method" >
+            <option value="GET" >GET</option>
+            <option value="POST" >POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="HEAD">HEAD</option>
+        </select>
+        <input type="checkbox" id="sync" name="sync" />sync
+        <input type="button" onclick="javascript:doRequest();" value="Do Request" />
+        <br/>
+        Process: <input type="checkbox" value="Checked" id="append" name="append" />append
+        <div id="process_indicator" ></div>
+        <div id="result">
+
+        </div>
+    </form>
+</body>
+</html>
