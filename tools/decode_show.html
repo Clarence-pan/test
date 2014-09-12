@@ -74,10 +74,10 @@
 
 <div>
     <input type="text" id="goto_url" name="goto_url" style="width: 100%"
-           value="http://bb.test.tuniu.org/bb/public/cps/cpsshowreport" onchange="on_goto_url_change()" />
+           value="http://bb.me/bb/public/cps/cpsshowreport" onchange="on_goto_url_change()" />
     <select id="goto_url_select" name="goto_url_select" onchange="javascirpt:on_goto_url_selection_change()">
-        <option value="http://bb.test.tuniu.org/bb/public/cps/cpsshowreport">http://bb.test.tuniu.org/bb/public/cps/cpsshowreport</option>
-        <option value="http://hg.test.tuniu.org/hg/cps/cpsshowreport">http://hg.test.tuniu.org/hg/cps/cpsshowreport</option>
+        <option value="http://bb.me/bb/public/cps/cpsshowreport">http://bb.me/bb/public/cps/cpsshowreport</option>
+        <option value="http://hg.me/hg/cps/cpsshowreport">http://hg.me/hg/cps/cpsshowreport</option>
     </select>
     <input type="button" value="GOTO URL(GET, Using base64 as GET param)" onclick="goto_url_get()"/>
     <input type="button" value="DO GET & PARSE" onclick="do_get_and_parse()" />
@@ -85,6 +85,25 @@
 <div id="log"></div>
 
 <script type="text/javascript">
+(function () {
+    window.onresize = adjust_input_size;
+    adjust_input_size();
+    var urls = [
+        'http://bb.me/bb/public/cps/cpsshowreportexcel',
+        'http://hg.me/hg/cps/cpsshowreportexcel'
+    ];
+    for (var i in urls){
+        add_option_to_goto_url_select(urls[i]);
+    }
+    $(goto_url).val($(goto_url_select).val());
+})();
+function add_option_to_goto_url_select(option_url) {
+    var new_opt = document.createElement('option');
+    new_opt.value = option_url;
+    new_opt.innerText = option_url;
+    new_opt.selected = true;
+    goto_url_select.add(new_opt);
+}
 function on_goto_url_change(){
     var url = $(goto_url).val();
     for (var opt_index in goto_url_select.options) {
@@ -93,11 +112,7 @@ function on_goto_url_change(){
             return;
         }
     }
-    var new_opt = document.createElement('option');
-    new_opt.value = url;
-    new_opt.innerText = url;
-    new_opt.selected = true;
-    goto_url_select.add(new_opt);
+    add_option_to_goto_url_select(url);
 }
 function on_goto_url_selection_change(){
     $(goto_url).val($(goto_url_select).val());
@@ -157,11 +172,6 @@ function on_input_value_change() {
 function adjust_input_size() {
     //$(input_value).height($(window).height()  - $(ta).height() - 50);
 }
-(function () {
-    window.onresize = adjust_input_size;
-    adjust_input_size();
-    //window.alert(window.location.href);
-})();
 function report_error(msg) {
     $(err).text(msg);
     $(err).show();
