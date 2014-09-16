@@ -35,6 +35,19 @@
         select {
             width: 100%;
         }
+        div .wrapper{
+            min-width: 50vw;
+            max-width: 100vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 0;
+            border: 0;
+            margin: 0;
+        }
+
+        div .syntaxhighlighter {
+            overflow: visible !important;
+        }
     </style>
 
     <script type='text/javascript' src='js/jquery.js'></script>
@@ -95,6 +108,10 @@
     for (var i in urls){
         add_option_to_goto_url_select(urls[i]);
     }
+    urls = localStorage.urls.split("\n");
+    for (var i in urls){
+        add_option_to_goto_url_select(urls[i]);
+    }
     $(goto_url).val($(goto_url_select).val());
 })();
 function add_option_to_goto_url_select(option_url) {
@@ -112,6 +129,7 @@ function on_goto_url_change(){
             return;
         }
     }
+    localStorage.urls = localStorage.urls + "\n" + url;
     add_option_to_goto_url_select(url);
 }
 function on_goto_url_selection_change(){
@@ -196,7 +214,13 @@ function output(convertion, json, base64) {
     var json_pre = document.createElement('pre');
     json_pre.className = "brush: js;";
     json_pre.innerHTML = json;
-    $(log).prepend(json_pre);
+    var json_pre_wrapper = document.createElement("div");
+    json_pre_wrapper.className = "wrapper";
+    json_pre_wrapper.appendChild(json_pre);
+    json_pre_wrapper.onscroll = function(){
+      json_pre_wrapper.scroll();
+    };
+    $(log).prepend(json_pre_wrapper);
     $(log).prepend(json_title);
     SyntaxHighlighter.highlight({}, json_pre);
     var goto_url_a = document.createElement("a");
@@ -204,7 +228,7 @@ function output(convertion, json, base64) {
     goto_url_a.target = "_blank";
     $(log).prepend(goto_url_a);
     var convertion_p = document.createElement('h3');
-    convertion_p.innerText = convertion;
+    convertion_p.innerText = convertion + '  - '+ (new Date()).toLocaleString();
     $(log).prepend(convertion_p);
     $(log).prepend(document.createElement("hr"));
     if (convertion == "BASE64 ENCODE") {
@@ -212,6 +236,7 @@ function output(convertion, json, base64) {
     } else {
         $(output_value).val(json);
     }
+    window.location.replace(window.location.origin + window.location.pathname + "#log");
 }
 function decode64() {
     var result = Base64.decode($('#input_value').val());
