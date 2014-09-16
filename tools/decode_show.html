@@ -102,15 +102,19 @@
     window.onresize = adjust_input_size;
     adjust_input_size();
     var urls = [
+        'http://buckbeek.sit.tuniu.org/bb/public/cps/cpsshowreport',
+        'http://buckbeek.sit.tuniu.org/bb/cps/cpsproduct',
         'http://bb.me/bb/public/cps/cpsshowreportexcel',
         'http://hg.me/hg/cps/cpsshowreportexcel'
     ];
     for (var i in urls){
         add_option_to_goto_url_select(urls[i]);
     }
-    urls = localStorage.urls.split("\n");
-    for (var i in urls){
-        add_option_to_goto_url_select(urls[i]);
+    if (localStorage.urls + "" != "undefined") {
+		urls = localStorage.urls.split("\n");
+		for (var i in urls){
+			add_option_to_goto_url_select(urls[i]);
+		}
     }
     $(goto_url).val($(goto_url_select).val());
 })();
