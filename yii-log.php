@@ -42,6 +42,12 @@ class ArrayLog {
             $val = base64_decode($val);
         }
         //var_dump($arr);
+        if (feof($this->file)){
+            return false;
+        } else if (empty($arr)) {
+            return array('--', '--', $line);
+        }
+
         return $arr;
     }
     public function __destruct(){
@@ -154,8 +160,8 @@ $log = new ArrayLog($fileName);
     <form method="GET" action="<?= $_SERVER['REQUEST_URI'] ?>" style="position: relative; top: -1.5em; left: 5em" >
         <input type="submit" value="Refresh">
         <label onclick="toggle_stack_trace()">Toggle Stack Trace</label>
+        <a href="#bottom" >BOTTOM</a>
     </form>
-
 </div>
 <?php for ($logline = $log->next(); $logline; $logline = $log->next()): ?>
     <table >
@@ -168,5 +174,6 @@ $log = new ArrayLog($fileName);
         </tbody>
     </table>
 <?php endfor; ?>
+<div id="bottom" ></div>
 </body>
 </html>
