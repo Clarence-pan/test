@@ -41,7 +41,7 @@ class ArrayLog {
         foreach ($arr as &$val) {
             $val = base64_decode($val);
         }
-        var_dump($arr);
+        //var_dump($arr);
         return $arr;
     }
     public function __destruct(){
