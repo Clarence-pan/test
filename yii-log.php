@@ -23,14 +23,29 @@ array (
  * */
 require("/plib/eval_code.php");
 
+if ($_POST['CLEAR'] == 'YES') {
+    file_put_contents($fileName, "");
+    file_put_contents($fileName . '.bak', var_export($log, true));
+    echo "Clear finished! (Note: old log file is backup to .bak)";
+}
 class ArrayLog {
     public function __construct($fileName){
         $this->file = fopen($fileName, "rt");
     }
     public function next(){
         $line = fgets($this->file);
-        $line = rtrim($line, ',');
-        return eval($line);
+        $line = 'return ' . $line . ';';
+        //echo $line;
+        //var_dump($line);
+        $arr =  eval($line);
+        foreach ($arr as &$val) {
+            $val = base64_decode($val);
+        }
+        var_dump($arr);
+        return $arr;
+    }
+    public function __destruct(){
+        fclose($this->file);
     }
 }
 
@@ -40,6 +55,8 @@ function readSqlLog($fileName='d:\yii-sql.log'){
     //echo $code;
     return eval_code($code);
 }
+
+$log = new ArrayLog($fileName);
 
 //$log = readSqlLog($fileName);
 //var_dump($log);
@@ -140,24 +157,16 @@ function readSqlLog($fileName='d:\yii-sql.log'){
     </form>
 
 </div>
-<?php
-if ($_POST['CLEAR'] == 'YES') {
-    file_put_contents($fileName, "");
-    file_put_contents($fileName . '.bak', var_export($log, true));
-    echo "Clear finished! (Note: old log file is backup to .bak)";
-    $log = array();
-}
-?>
-<?php foreach ($log as $logLine): ?>
+<?php for ($logline = $log->next(); $logline; $logline = $log->next()): ?>
     <table >
         <tbody>
         <tr>
-            <?php foreach ($logLine as $key => $logValue): ?>
+            <?php foreach ($logline as $key => $logValue): ?>
                 <td><pre class="<?= $key ?>"><?= $logValue ?></pre></td>
             <?php endforeach; ?>
         </tr>
         </tbody>
     </table>
-<?php endforeach; ?>
+<?php endfor; ?>
 </body>
 </html>
