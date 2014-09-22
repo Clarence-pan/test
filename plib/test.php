@@ -1,8 +1,6 @@
 <?php
 
-namespace plib;
-use \Exception;
-use \stdClass;
+
 /**
  * Created by PhpStorm.
  * User: panchangyun
@@ -12,7 +10,7 @@ use \stdClass;
 
 // start test:
 // 1: Test::runTests()
-class Test {
+class Test extends CController {
     private $_result = array(); // [ { name=>'something', status=>'error/failed/passed', detail='...'}, ...]
     const ERROR = 'error';
     const FAILED = 'failed';
@@ -86,11 +84,13 @@ class Test {
         foreach ($this->_result as $result) {
             $statistic[$result->status]++;
         }
-        output("Result: ");
+        echo '<div style="position: fixed; left: 40vw; top: 0; background-color: bisque; padding: 0.3em;">';
+        echo "Result: ";
         foreach ($statistic as $status => $count) {
-            output("$status: $count ");
+            echo "$status: $count ";
         }
-        output("\n");
+        echo "\n";
+        echo '</div>';
     }
     public function setResult($case, $status, $detail=null){
         $this->_result[$case] = $result = new stdClass();
@@ -127,12 +127,74 @@ class ExampleTest extends Test{
     }
 }
 
+class RestfullyTest extends Test{
+
+    // array的key要唯一，要么是数字要么是字符串
+    public function checkArrayStructure($example, $data){
+        foreach ($example as $key => $value) {
+            $dataKeyChecked = false;
+            if (is_numeric($key)){
+                foreach ($data as $dataKey => $dataVal) {
+                    $this->assert(is_numeric($dataKey));
+                    $this->checkArrayStructure($value, $dataVal);
+                }
+                break;
+            } else {
+                $this->assert(isset($data[$key]));
+                $this->checkArrayStructure($value, $data[$key]);
+
+                if (!$dataKeyChecked){
+                    $dataKeyChecked = true;
+                    foreach ($data as $dataKey => $dataVal) {
+                        $this->assert(is_string($dataKey));
+                    }
+                }
+            }
+        }
+
+    }
+}
+
 function trace($msg){
     output("TRACE: " . strval($msg) . "\n");
 }
-function log($msg){
-    output("LOG: " . strval($msg) . "\n");
-}
 function output($msg){
     echo "<pre>" . str_replace("\n", "<br/>", $msg) . "</pre>";
+}
+
+/*
+ * @param array
+ * @method string GET, POST, PUT, DELETE
+ * @format string
+ * 		'xml' 				=> 'application/xml',
+		'json' 				=> 'application/json',
+		'serialize' 		=> 'application/vnd.php.serialized',
+		'php' 				=> 'text/plain',
+    	'csv'				=> 'text/csv',
+		'encrypt'			=> 'text/html' (base64 and json)
+        'html'              => 'text/html' (no base64)
+ * */
+function requestUrl($url, $param=null, $method="GET", $format='encrypt'){
+    dump(array('URL' => $url, "PARAM" => $param, "method" => $method, "format" => $format));
+    if ($format == 'html'){
+
+    } else {
+        $restClient = new \RESTClient();
+        $response = $restClient->$method($url, $param, $format);
+        unset($restClient);
+    }
+    dump(array('RESPONSE' => $response));
+    return $response;
+}
+function getUrl($url, $param=null, $format=null){
+    return requestUrl($url, $param, "GET", $format);
+}
+function postUrl($url, $param=null, $format=null){
+    return requestUrl($url, $param, "POST", $format);
+}
+function putUrl($url, $param=null, $format=null){
+    return requestUrl($url, $param, "PUT", $format);
+}
+function deleteUrl($url, $param=null, $format=null){
+    return requestUrl($url, $param, "DELETE", $format);
 }
