@@ -77,7 +77,7 @@ class CVarDumper
     private static function is_array_ref_to_self($arr, $key, $maxLevel = 10){
         for ($level = 0; $level < $maxLevel; $level++) {
             $val = $arr[$key];
-            if (!$val or !is_array($val)) {
+            if (empty($val) or !is_array($val)) {
                 return false;
             }
             $arr = $val;

@@ -2,14 +2,21 @@
 
 ####################just for dump debug######################
 require_once(dirname(__FILE__).'/CVarDumper.php');
-function dump($var, $title="") {
+
+function dump($var, $echo=true, $title="") {
+    $result = "";
     if ($title != ""){
-        echo "<b>" . $title . ":</b><br/>";
+        $result .= "<b>" . $title . ":</b><br/>";
     }
-    echo "<pre>";
-    CVarDumper::dump($var, 10, true);
-    echo "</pre>";
-    echo "<br/>";
+    $result .= "<pre>";
+    $result .= CVarDumper::dumpAsString($var, 10, true);
+    $result .= "</pre>";
+    $result .= "<br/>";
+    if ($echo) {
+        echo $result;
+    }
+    return $result;
+    //return var_dump($var);
 }
 
 if (false){
