@@ -73,11 +73,15 @@ class Test extends CController {
             call_user_func_array(array($this, 'test' . $case), array());
             $this->setResult($case, Test::PASSED);
         } catch (TestFailedException $e){
-            $this->setResult($case, Test::FAILED, $e);
+            $this->setResult($case, Test::FAILED, $e->getMessage(). ' : '. $e->getTraceAsString());
         } catch (Exception $e){
-            $this->setResult($case, Test::ERROR, $e);
+            $this->setResult($case, Test::ERROR, $e->getMessage(). ' : '. $e->getTraceAsString());
+
         }
         trace("End running testcase '$case' => RESULT: " . $this->getResult($case)->status);
+        if ($this->needTraceDetail() && $this->getResult($case)->status != self::PASSED){
+            trace("Detailed:" . strval($this->getResult($case)->detail));
+        }
     }
     public function reportResult(){
         $statistic = array();
@@ -96,22 +100,24 @@ class Test extends CController {
         $this->_result[$case] = $result = new stdClass();
         $result->name = $case;
         $result->status = $status;
-        $detail->detail = $detail;
+        $result->detail = $detail;
     }
     public function getResult($case){
         return $this->_result[$case];
     }
 
-    public function failed(){
-        throw new TestFailedException();
+    public function failed($msg){
+        throw new TestFailedException($msg);
     }
 
-    public function assert($condition){
+    public function assert($condition, $msg=null){
         if (!$condition){
-            $this->failed();
+            $this->failed($msg);
         }
     }
-
+    protected function needTraceDetail(){
+        return true;
+    }
 }
 
 class TestFailedException extends Exception{
@@ -130,28 +136,36 @@ class ExampleTest extends Test{
 class RestfullyTest extends Test{
 
     // array的key要唯一，要么是数字要么是字符串
-    public function checkArrayStructure($example, $data){
-        foreach ($example as $key => $value) {
-            $dataKeyChecked = false;
-            if (is_numeric($key)){
-                foreach ($data as $dataKey => $dataVal) {
-                    $this->assert(is_numeric($dataKey));
-                    $this->checkArrayStructure($value, $dataVal);
-                }
-                break;
-            } else {
-                $this->assert(isset($data[$key]));
-                $this->checkArrayStructure($value, $data[$key]);
-
-                if (!$dataKeyChecked){
-                    $dataKeyChecked = true;
+    public function checkArrayStructure($example, $data, $throw=true){
+        try{
+            foreach ($example as $key => $value) {
+                $dataKeyChecked = false;
+                if (is_numeric($key)){
+                    $this->assert(is_array($data));
                     foreach ($data as $dataKey => $dataVal) {
-                        $this->assert(is_string($dataKey));
+                        $this->assert(is_numeric($dataKey));
+                        $this->checkArrayStructure($value, $dataVal);
+                    }
+                    break;
+                } else {
+                    $this->assert(isset($data[$key]));
+                    $this->checkArrayStructure($value, $data[$key]);
+
+                    if (!$dataKeyChecked){
+                        $dataKeyChecked = true;
+                        foreach ($data as $dataKey => $dataVal) {
+                            $this->assert(is_string($dataKey));
+                        }
                     }
                 }
             }
+        } catch(TestFailedException $e){
+            if (!$throw){
+                return false;
+            }
+            throw new TestFailedException($e->getMessage(), $e->getCode(), $e);
         }
-
+        return true;
     }
 }
 
