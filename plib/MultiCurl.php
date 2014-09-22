@@ -20,7 +20,9 @@ class MultiCurl {
      * @see addUrl
      */
     public function __construct(array $urls = null){
-        $this->addUrls($urls);
+        if ($urls != null){
+            $this->addUrls($urls);
+        }
     }
 
     /**
