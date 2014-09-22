@@ -7,7 +7,7 @@
  * @copyright Copyright &copy; 2008-2011 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
-
+namespace plib\dump;
 /**
  * CVarDumper is intended to replace the buggy PHP function var_dump and print_r.
  * It can correctly identify the recursively referenced objects in a complex
