@@ -20,7 +20,7 @@ class MultiCurl {
      * @see addUrl
      */
     public function __construct(array $urls = null){
-        $this->urls = $urls;
+        $this->addUrls($urls);
     }
 
     /**
@@ -54,12 +54,8 @@ class MultiCurl {
      * @return self
      */
     public function addUrls(array $urls){
-        if ($this->urls === null){
-            $this->urls = $urls;
-            return;
-        }
-        foreach ($urls as &$url) {
-            $this->urls[] = $url;
+        foreach ($urls as $url) {
+            $this->addUrl($url['url'], $url['param'], isset($url['method']) ? $url['method'] : "GET", $url['format']);
         }
         return $this;
     }
