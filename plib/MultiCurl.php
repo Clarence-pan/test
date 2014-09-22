@@ -125,7 +125,7 @@ class MultiCurl {
      * @return self
      */
     public function exec($waitTillEnd=false, $returnResult=false){
-
+        Yii::log("exec: $waitTillEnd, $returnResult");
         // init multi-curl and curl and add into multi-curl
         $this->multiCurl = curl_multi_init();
         for ($i = 0, $cnt = count($this->urls); $i < $cnt; $i++) {
@@ -144,6 +144,7 @@ class MultiCurl {
             } else { // GET
                 if ($queryString != null){
                     curl_setopt($ch, CURLOPT_URL, $url['url'] . '?' . $queryString);
+                    Yii::log("Made query ULR for GET: " . $url['url'] . '?' . $queryString);
                 }
             }
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  // 将curl_exec()获取的信息以文件流的形式返回，而不是直接输出。
@@ -172,10 +173,12 @@ class MultiCurl {
      * @return self
      */
     public function wait(){
+        Yii::log("wait: running: {$this->running}, mrc: {$this->mrc}");
         while ($this->running && $this->mrc == CURLM_OK) {
             if (curl_multi_select($this->multiCurl) != -1){
                 do {
-                    $this->mrc = curl_multi_select($this->multiCurl, $this->running);
+                    $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
+                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurl}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))");
                 }while($this->mrc == CURLM_CALL_MULTI_PERFORM);
             }
         }
@@ -185,18 +188,18 @@ class MultiCurl {
     /**
      * get results of urls
      * @return array ( array( 'url' => "http://..."
-     *                         'result' => array( 'content' => mixed,
-     *                                            'contentRaw' => "....")
+     *                         'resultRaw' => '...raw result...'
+     *                         'result' => stdClass(...))
      */
     public function getResults(){
         foreach ($this->urls as &$url) {
             $contentRaw = curl_multi_getcontent($url['curl']);
             $content = $this->antiFormat($contentRaw, $url['format']);
-            $url['result'] = array('contentRaw' => $contentRaw,
-                                    'content' => $content);
+            $url['resultRaw'] =  $contentRaw;
+            $url['result'] = $content;
 
         }
-        return $this->$urls;
+        return $this->urls;
     }
 
     /**
