@@ -1,6 +1,8 @@
+<?PHP if(!$_REQUEST["autoAppend"]){ ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
+<?PHP } ?>
 <?php
 /**
  * Created by PhpStorm.
@@ -24,14 +26,23 @@ array (
  * */
 require("/plib/eval_code.php");
 
-if ($_POST['CLEAR'] == 'YES') {
+if ($_REQUEST['clear']) {
     file_put_contents($fileName, "");
     file_put_contents($fileName . '.bak', var_export($log, true));
     echo "Clear finished! (Note: old log file is backup to .bak)";
 }
 class ArrayLog {
+    public $fileSize;
+    public $filemtime;
+    public $fileName;
     public function __construct($fileName){
-        $this->file = fopen($fileName, "rt");
+        $this->file = fopen($fileName, "rb");
+        $this->fileName = $fileName;
+        $this->fileSize = filesize($fileName);
+        $this->filemtime = filemtime($fileName);
+    }
+    public function seek($offset){
+        fseek($this->file, $offset);
     }
     public function next(){
         $line = fgets($this->file);
@@ -69,7 +80,25 @@ $log = new ArrayLog($fileName);
 //var_dump($log);
 //$log = array_reverse($log);
 
+function output_logs($log, $id=100000){
+    for ($logline = $log->next(); $logline; $logline = $log->next(), $id++): /* id="<?=$id?>" */ ?>
+        <ul  class="log">
+            <li class="line"><?= $id + 1 ?>:</li>
+            <?php foreach ($logline as $key => $logValue): ?>
+                <li class="<?= $key ?>"><?= $logValue ?></li>
+            <?php endforeach; ?>
+        </ul>
+    <?PHP if ($id % 200 == 0): ?>
+        <script type="application/javascript">
+            scrollToBottom();
+        </script>
+    <?PHP endif;
+    endfor;
+    return $id;
+}
+
 ?>
+<?PHP if(!$_REQUEST["autoAppend"]){ ?>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <!--
@@ -81,6 +110,18 @@ $log = new ArrayLog($fileName);
         function toggle_stack_trace(){
             $('.stackTrace').toggle();
         }
+        function buildQuery(key, value){
+            var query = getCurrentParams();
+            if (typeof(key) == 'object'){
+                for (var k in key){
+                    query[k] = key[k];
+                }
+            } else {
+                query[key] = value;
+            }
+            query = buildQueryString(query);
+            return query;
+        }
         function refresh(key, value){
 //            $href = window.location.href;
 //            if ($href[$href.length-1] != '?'){
@@ -88,9 +129,7 @@ $log = new ArrayLog($fileName);
 //            }
 //            $href = $href + $param;
 //            window.open($href, "_self");
-            var query = getCurrentParams();
-            query[key] = value;
-            query = buildQueryString(query);
+            var query = buildQuery(key, value);
             location.replace(query);
         }
         function getCurrentParams(){
@@ -110,6 +149,43 @@ $log = new ArrayLog($fileName);
                 query = query + i + "=" + params[i] + "&";
             }
             return query;
+        }
+        var fileOffset = <?=  $log->fileSize ?>;
+        function autoAppend(){
+            var url = buildQuery({"seek": fileOffset,
+                                   "autoAppend": 1,
+                                   "id": window.itemId});
+            ajaxGetContent(url, true, function(content){
+                document.body.insertAdjacentHTML("beforeEnd", content);
+                scrollToBottom();
+            });
+            if (window.stopAutoAppend){
+                return;
+            }
+            setTimeout("autoAppend()", 1000);
+        }
+        function ajaxGetContent(url, async, resultCallbackFunc){
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function(){
+                if (xhttp.readyState == 4 && xhttp.status == 200){
+                    resultCallbackFunc(xhttp.responseText);
+                }
+            };
+            xhttp.open("GET", url, async);
+            xhttp.send();
+        }
+        function scrollToBottom(){
+//            var bottom = document.getElementById('bottom');
+//            if (!bottom){
+//                bottom = document.createElement("div");
+//                bottom.id = 'bottom';
+//            }
+//            document.body.appendChild(bottom);
+//            location.replace("#bottom");
+            window.scroll(0, 9999999999);
+        }
+        function scrollToTop(){
+            window.scrollTo(0, 0);
         }
     </script>
     <title></title>
@@ -202,7 +278,7 @@ $log = new ArrayLog($fileName);
         }
         .tools{
             position: fixed;
-            left: 40vw;
+            left: 20vw;
             top: 1vh;
             z-index: 10;
         }
@@ -210,38 +286,32 @@ $log = new ArrayLog($fileName);
 </head>
 <body>
 <div class="tools">
-    <form method="POST" action="<?= $_SERVER['REQUEST_URI'] ?>" >
-        <input type="hidden" name="CLEAR" id="CLEAR" value="YES" />
-        <input type="submit" value="Clear">
-    </form>
-    <form method="GET" action="<?= $_SERVER['REQUEST_URI'] ?>" style="position: relative; top: -1.5em; left: 5em" >
+    <form method="GET" action="<?= $_SERVER['REQUEST_URI'] ?>" >
         <input type="submit" value="Refresh">
+        <input type="button" onclick="refresh('clear', 1)" Value="Clear" />
         <input type="button" onclick="refresh('displayStackTrace',1)" Value="Display Stack Trace" />
-        <a href="#bottom" >BOTTOM</a>
+        <input type="button" onclick="refresh('seek', <?= $log->fileSize ?>)" value="See new"/>
+        <input type="button" onclick="window.stopAutoAppend = false; autoAppend();" value="Auto append" />
+        <input type="button" onclick="window.stopAutoAppend = true" value="Stop auto append" />
+        <input type="button" onclick="scrollToTop()" value="Top" />
+        <input type="button" onclick="scrollToBottom()" value="Bottom" />
     </form>
 </div>
-
-
-<?php for ($logline = $log->next(), $id=100000; $logline; $logline = $log->next(), $id++): ?>
-        <ul id="<?=$id?>" class="log">
-            <li class="line"><?= $id + 1 - 100000 ?>:</li>
-            <?php foreach ($logline as $key => $logValue): ?>
-                <li class="<?= $key ?>"><?= $logValue ?></li>
-            <?php endforeach; ?>
-        </ul>
-        <?PHP if ($id % 200 == 0): ?>
-        <script type="application/javascript">
-            (function(){
-                location.replace("#<?= $id ?>" );
-            })();
-        </script>
-        <?PHP endif; ?>
-<?php endfor; ?>
-<div id="bottom" ></div>
+<?php }?>
 <script type="application/javascript">
-    (function(){
-        location.replace("#bottom" );
-    })();
+    console.log("Last modified time: <?= date('Y-m-d H:i:s', $log->filemtime) ?>, file size: <?= $log->fileSize ?>bytes");
 </script>
-</body>
-</html>
+
+<?PHP
+if ($_REQUEST['seek']){
+    $log->seek(intval($_REQUEST['seek']));
+}
+$id =  $_REQUEST["id"];
+$id = $id ? $id : 0;
+$id = output_logs($log, $id);
+?>
+
+<script type="application/javascript">
+    scrollToBottom();
+    window.itemId = <?= $id ?>;
+</script>
