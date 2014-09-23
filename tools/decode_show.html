@@ -240,7 +240,8 @@ function output(convertion, json, base64) {
     } else {
         $(output_value).val(json);
     }
-    window.location.replace(window.location.origin + window.location.pathname + "#log");
+    //window.location.replace(window.location.origin + window.location.pathname + "#log");}
+    window.location.replace("#log");
 }
 function decode64() {
     var result = Base64.decode($('#input_value').val());
