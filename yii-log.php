@@ -72,9 +72,11 @@ $log = new ArrayLog($fileName);
 ?>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <!--
     <script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.autocomplete.js'></script>
     <script type="text/javascript" src="js/jquery-ui/jquery-ui.js" >    </script>
+    -->
     <script type="text/javascript">
         function toggle_stack_trace(){
             $('.stackTrace').toggle();
@@ -225,9 +227,6 @@ $log = new ArrayLog($fileName);
         <a href="#bottom" >BOTTOM</a>
     </form>
 </div>
-<div id="bottom" ></div>
-</body>
-</html>
 
 
 <?php for ($logline = $log->next(), $id=100000; $logline; $logline = $log->next(), $id++): ?>
@@ -237,12 +236,19 @@ $log = new ArrayLog($fileName);
                 <li class="<?= $key ?>"><?= $logValue ?></li>
             <?php endforeach; ?>
         </ul>
+        <?PHP if ($id % 200 == 0): ?>
         <script type="application/javascript">
             (function(){
-                var id = <?= $id ?>;
-                var ul = document.getElementById(id);
-                document.body.insertAdjacentElement("afterBegin", ul);
+                location.replace("#<?= $id ?>" );
             })();
         </script>
+        <?PHP endif; ?>
 <?php endfor; ?>
-
+<div id="bottom" ></div>
+<script type="application/javascript">
+    (function(){
+        location.replace("#bottom" );
+    })();
+</script>
+</body>
+</html>
