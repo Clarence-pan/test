@@ -11,6 +11,7 @@
 if (!isset($fileName)) {
     $fileName = 'd:\yii-array.log';
 }
+error_reporting(E_ERROR);
 /*
  *
 array (
@@ -78,6 +79,36 @@ $log = new ArrayLog($fileName);
         function toggle_stack_trace(){
             $('.stackTrace').toggle();
         }
+        function refresh(key, value){
+//            $href = window.location.href;
+//            if ($href[$href.length-1] != '?'){
+//                $href = $href + "?";
+//            }
+//            $href = $href + $param;
+//            window.open($href, "_self");
+            var query = getCurrentParams();
+            query[key] = value;
+            query = buildQueryString(query);
+            location.replace(query);
+        }
+        function getCurrentParams(){
+            var params = {};
+            var searches = window.location.search.substr(1).split("&")
+            for (var s in searches){
+                var i = s.indexOf('=');
+                if (i>0){
+                    params[s.substr(0,i)] = s.substr(i+1);
+                }
+            }
+            return params;
+        }
+        function buildQueryString(params){
+            var query = "?";
+            for (var i in params){
+                query = query + i + "=" + params[i] + "&";
+            }
+            return query;
+        }
     </script>
     <title></title>
     <style type="text/css" >
@@ -119,11 +150,29 @@ $log = new ArrayLog($fileName);
             border-bottom-style: solid;
             vertical-align: top;
         }
+        body {
+            background-color: rgba(152, 251, 152, 0.24);
+            margin-top: 3em;
+        }
+        ul.log {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-top-color: rgba(82, 168, 236, 0.6);
+            border-top-width: 1px;
+            border-top-style: solid;
+        }
+        li {
+            display: inline;
+            white-space: pre-wrap;
+            font-size: 13px;
+            color: darkblue;
+        }
         .level {
-            display: none;
+            display: none !important;
         }
         .category {
-            display: none;
+            display: none !important;
         }
         .msgHead {
             font-weight: bold;
@@ -133,9 +182,22 @@ $log = new ArrayLog($fileName);
             min-width: 60vw;
             max-width: 70vw;
             white-space: pre-wrap;
+            position: relative;
+            left: 1em;
+            color: black;
+        }
+        .line {
+
         }
         .stackTrace{
-            display: none;
+            <?PHP if (!$_REQUEST['displayStackTrace']): ?>
+            display: none !important;
+            <?PHP else: ?>
+            display: block !important;
+            float: right;
+            position: relative;
+            left: 50vw;
+            <?PHP endif; ?>
             white-space: pre-wrap;
             max-height: 33vh;
             min-width: 80vw;
@@ -159,21 +221,28 @@ $log = new ArrayLog($fileName);
     </form>
     <form method="GET" action="<?= $_SERVER['REQUEST_URI'] ?>" style="position: relative; top: -1.5em; left: 5em" >
         <input type="submit" value="Refresh">
-        <label onclick="toggle_stack_trace()">Toggle Stack Trace</label>
+        <input type="button" onclick="refresh('displayStackTrace',1)" Value="Display Stack Trace" />
         <a href="#bottom" >BOTTOM</a>
     </form>
 </div>
-<?php for ($logline = $log->next(); $logline; $logline = $log->next()): ?>
-    <table >
-        <tbody>
-        <tr>
-            <?php foreach ($logline as $key => $logValue): ?>
-                <td><pre class="<?= $key ?>"><?= $logValue ?></pre></td>
-            <?php endforeach; ?>
-        </tr>
-        </tbody>
-    </table>
-<?php endfor; ?>
 <div id="bottom" ></div>
 </body>
 </html>
+
+
+<?php for ($logline = $log->next(), $id=100000; $logline; $logline = $log->next(), $id++): ?>
+        <ul id="<?=$id?>" class="log">
+            <li class="line"><?= $id + 1 - 100000 ?>:</li>
+            <?php foreach ($logline as $key => $logValue): ?>
+                <li class="<?= $key ?>"><?= $logValue ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <script type="application/javascript">
+            (function(){
+                var id = <?= $id ?>;
+                var ul = document.getElementById(id);
+                document.body.insertAdjacentElement("afterBegin", ul);
+            })();
+        </script>
+<?php endfor; ?>
+
