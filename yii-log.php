@@ -170,42 +170,35 @@ $log = new ArrayLog($fileName);
             font-size: 13px;
             color: darkblue;
         }
-        .level {
+        li.level {
             display: none !important;
         }
-        .category {
+        li.category {
             display: none !important;
         }
-        .msgHead {
+        li.msgHead {
             font-weight: bold;
             min-width: 5em;
         }
-        .msgBody {
-            min-width: 60vw;
-            max-width: 70vw;
-            white-space: pre-wrap;
+        li.msgBody {
+            display: block;
             position: relative;
-            left: 1em;
+            left: 11em;
+            white-space: pre-wrap;
             color: black;
         }
-        .line {
+        li.line {
 
         }
-        .stackTrace{
+        li.stackTrace{
             <?PHP if (!$_REQUEST['displayStackTrace']): ?>
             display: none !important;
             <?PHP else: ?>
             display: block !important;
-            float: right;
-            position: relative;
-            left: 50vw;
+            position: relative !important;
+            left: 11em !important;
             <?PHP endif; ?>
             white-space: pre-wrap;
-            max-height: 33vh;
-            min-width: 80vw;
-            max-width: 100vw;
-            overflow-y: scroll;
-            overflow-x: hidden;
         }
         .tools{
             position: fixed;
