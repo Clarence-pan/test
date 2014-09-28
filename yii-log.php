@@ -25,11 +25,13 @@ array (
   'stackTrace' => ...
  * */
 require("/plib/eval_code.php");
-
-if ($_REQUEST['clear']) {
-    file_put_contents($fileName, "");
-    file_put_contents($fileName . '.bak', var_export($log, true));
-    echo "Clear finished! (Note: old log file is backup to .bak)";
+if ($_REQUEST['clear']){
+    if ($_REQUEST['clear'] >= filesize($fileName)) {
+        file_put_contents($fileName, "");
+        echo "Clear finished!";
+    }else{
+        echo "Already cleared! The following is new one: ";
+    }
 }
 class ArrayLog {
     public $fileSize;
@@ -38,8 +40,15 @@ class ArrayLog {
     public function __construct($fileName){
         $this->file = fopen($fileName, "rb");
         $this->fileName = $fileName;
-        $this->fileSize = filesize($fileName);
+        $this->fileSize = $this->my_filesize($this->file);
         $this->filemtime = filemtime($fileName);
+    }
+    public function my_filesize($file){
+        $oldPos = ftell($file);
+        fseek($file. 0, SEEK_END);
+        $size = ftell($file);
+        fseek($file, $oldPos, SEEK_SET);
+        return $size;
     }
     public function seek($offset){
         fseek($this->file, $offset);
@@ -74,12 +83,6 @@ function readSqlLog($fileName='d:\yii-sql.log'){
     return eval_code($code);
 }
 
-$log = new ArrayLog($fileName);
-
-//$log = readSqlLog($fileName);
-//var_dump($log);
-//$log = array_reverse($log);
-
 function output_logs($log, $id=100000){
     for ($logline = $log->next(); $logline; $logline = $log->next(), $id++): /* id="<?=$id?>" */ ?>
         <ul  class="log">
@@ -97,6 +100,7 @@ function output_logs($log, $id=100000){
     return $id;
 }
 
+$log = new ArrayLog($fileName);
 ?>
 <?PHP if(!$_REQUEST["autoAppend"]){ ?>
 <head>
@@ -305,7 +309,7 @@ function output_logs($log, $id=100000){
 <div class="tools">
     <form method="GET" action="<?= $_SERVER['REQUEST_URI'] ?>" >
         <input type="submit" value="Refresh">
-        <input type="button" onclick="refresh('clear', 1)" Value="Clear" />
+        <input type="button" onclick="refresh('clear', getGlobal('fileSize') || 1)" Value="Clear" />
         <input type="button" onclick="refresh('displayStackTrace',1)" Value="Display Stack Trace" />
         <input type="button" onclick="refresh('seek', getGlobal('fileSize'))" value="See new"/>
         <input type="button" onclick="window.stopAutoAppend = false; autoAppend();" value="Auto append" />
