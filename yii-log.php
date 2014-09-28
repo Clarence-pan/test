@@ -107,6 +107,17 @@ function output_logs($log, $id=100000){
     <script type="text/javascript" src="js/jquery-ui/jquery-ui.js" >    </script>
     -->
     <script type="text/javascript">
+        function getGlobal(key){
+            var global = (function(){return this;})();
+            if (!key){
+                return global;
+            }
+            return global[key];
+        }
+        function setGlobal(key, value){
+            var global = (function(){return this;})();
+            global[key] = value;
+        }
         function toggle_stack_trace(){
             $('.stackTrace').toggle();
         }
@@ -150,14 +161,20 @@ function output_logs($log, $id=100000){
             }
             return query;
         }
-        var fileOffset = <?=  $log->fileSize ?>;
         function autoAppend(){
-            var url = buildQuery({"seek": fileOffset,
+            var url = buildQuery({"seek": getGlobal('fileSize'),
                                    "autoAppend": 1,
-                                   "id": window.itemId});
+                                   "id": getGlobal('itemId')});
             ajaxGetContent(url, true, function(content){
-                document.body.insertAdjacentHTML("beforeEnd", content);
+                var div = document.createElement('div');
+                div.innerHTML = content;
+                document.body.appendChild(div);
                 scrollToBottom();
+                var trick = '<!-- MUST RUN:';
+                var i = content.indexOf(trick);
+                if (i > 0){
+                    eval(content.substr(i + trick.length));
+                }
             });
             if (window.stopAutoAppend){
                 return;
@@ -290,7 +307,7 @@ function output_logs($log, $id=100000){
         <input type="submit" value="Refresh">
         <input type="button" onclick="refresh('clear', 1)" Value="Clear" />
         <input type="button" onclick="refresh('displayStackTrace',1)" Value="Display Stack Trace" />
-        <input type="button" onclick="refresh('seek', <?= $log->fileSize ?>)" value="See new"/>
+        <input type="button" onclick="refresh('seek', getGlobal('fileSize'))" value="See new"/>
         <input type="button" onclick="window.stopAutoAppend = false; autoAppend();" value="Auto append" />
         <input type="button" onclick="window.stopAutoAppend = true" value="Stop auto append" />
         <input type="button" onclick="scrollToTop()" value="Top" />
@@ -311,7 +328,12 @@ $id = $id ? $id : 0;
 $id = output_logs($log, $id);
 ?>
 
-<script type="application/javascript">
+<script type="application/javascript" >
+    setGlobal("itemId",  <?= $id ?>);
+    setGlobal("fileSize", <?= $log->fileSize ?>);
     scrollToBottom();
-    window.itemId = <?= $id ?>;
 </script>
+<!-- MUST RUN: // The above maybe cannot run, so eval the below:
+    setGlobal("itemId",  <?= $id ?>);
+    setGlobal("fileSize", <?= $log->fileSize ?>);
+//-->
