@@ -7,7 +7,7 @@
  */
 
 class MultiCurl {
-    private $urls = null;
+    private $urls = null;  // array of SingleUrl
     private $defaultFormat = 'base64json';  // or raw
     private $multiCurl = null;
     /**
@@ -37,11 +37,8 @@ class MultiCurl {
      * @return self
      */
     public function addUrl($url, array $param=null, $method="GET", $format=null){
-        $this->urls[] = array('url' => $url,
-                               'param' => $param,
-                               'method' => $method,
-                               'format' => $format,
-                                );
+        $singleCurl = new SingleUrl($url, $param, $method, $format);
+        $this->urls[] = $singleCurl;
         return $this;
     }
 
@@ -61,6 +58,208 @@ class MultiCurl {
         }
         return $this;
     }
+
+
+    /**
+     * @param bool $waitTillEnd 是否需要等到请求结束
+     * @return self
+     */
+    public function exec($waitTillEnd=false, $returnResult=false){
+        Yii::log("exec: $waitTillEnd, $returnResult");
+        // init multi-curl and curl and add into multi-curl
+        $this->multiCurl = curl_multi_init();
+        for ($i = 0, $cnt = count($this->urls); $i < $cnt; $i++) {
+            $singleCurl = $this->urls[$i];
+            $singleCurl->init();
+            curl_multi_add_handle($this->multiCurl, $singleCurl->getCurlHandle());
+        }
+
+        // run
+        $this->running = false;
+
+        /**
+         * curl_multi_perform(3) is asynchronous. It will only execute as little as possible and then return back control
+         * to your program. It is designed to never block. If it returns CURLM_CALL_MULTI_PERFORM you better call it again
+         * soon, as that is a signal that it still has local data to send or remote data to receive."
+         */
+        do {
+            $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
+        } while($this->mrc == CURLM_CALL_MULTI_PERFORM);
+
+        if ($waitTillEnd){
+            $this->wait();
+        }
+
+        if ($returnResult){
+            return $this->getResults();
+        }
+
+        return $this;
+    }
+
+    /**
+     * wait until end of the request
+     * @param $dealResultCallback callable - 当收到数据后处理的函数
+     * @return self
+     */
+    public function wait(callable $dealResultCallback=null){
+        Yii::log("wait: running: {$this->running}, mrc: {$this->mrc}");
+        while ($this->running && $this->mrc == CURLM_OK) {
+            if ($dealResultCallback){
+                $this->tryGetResult($dealResultCallback);
+            }
+            if (curl_multi_select($this->multiCurl) != -1){
+                do {
+                    $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
+                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurl}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))");
+                }while($this->mrc == CURLM_CALL_MULTI_PERFORM);
+            }
+        }
+        if ($dealResultCallback){
+            $this->tryGetResult($dealResultCallback);
+        }
+        return $this;
+    }
+
+    /**
+     * 尝试获取multi curl的结果，如果获取到，则调用callback来处理结果
+     * @param $dealResultCallback
+     */
+    public function tryGetResult($dealResultCallback){
+        while ($done = curl_multi_info_read($this->multiCurl)){
+            $curlHandle = $done['handle'];
+            $singleCurl = $this->findUrlByCurlHandle($curlHandle);
+            $singleCurl->getResultFromMultiCurl();
+            call_user_func_array($dealResultCallback, array($singleCurl));
+        }
+    }
+
+    /**
+     * 根据CURL的handle查找对应的url信息
+     * @param $curlHandle
+     * @return mixed
+     */
+    public function &findUrlByCurlHandle($curlHandle){
+        foreach ($this->urls as &$singleCurl) {
+            if ($singleCurl->getCurlHandle() == $curlHandle){
+                return $singleCurl;
+            }
+        }
+    }
+
+
+    /**
+     * get results of urls
+     * @return array ( array( 'url' => "http://..."
+     *                         'resultRaw' => '...raw result...'
+     *                         'result' => stdClass(...))
+     */
+    public function getResults(){
+        foreach ($this->urls as &$singleCurl) {
+            $singleCurl->getResultFromMultiCurl();
+        }
+        return $this->urls;
+    }
+
+    /**
+     * cleanup
+     */
+    public function cleanup(){
+        foreach ($this->urls as &$singleCurl){
+            $ch = $singleCurl->getCurlHandle();
+            if ($ch != null){
+                curl_close($ch);
+                if ($this->multiCurl != null){
+                    curl_multi_remove_handle($this->multiCurl, $ch);
+                }
+            }
+        }
+        if ($this->multiCurl != null){
+            curl_multi_close($this->multiCurl);
+        }
+    }
+
+    public function __destruct(){
+        $this->cleanup();
+    }
+}
+
+class SingleUrl
+{
+    /**
+     * @see MultiCurl::addUrl
+     * @param $url
+     * @param $param
+     * @param $method
+     * @param $format
+     */
+    public function __construct($url, $param, $method, $format){
+        $this->url = $url;
+        $this->param = $param;
+        $this->method = $method;
+        $this->format = $format;
+    }
+
+    /**
+     * 初始化
+     * @throws InvalidArgumentException
+     */
+    public function init(){
+        $ch = curl_init();
+        $this->curlHandle = $ch;
+        curl_setopt($ch, CURLOPT_URL, $this->url);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $queryString = null;
+        if (!empty($this->param)){
+            $queryString = $this->format($this->param, $this->format);
+        }
+        if ($queryString != null && strtoupper($this->method) != 'POST'){
+            $newUrl = $this->url;
+            // 如果原始url中本来就有querystring则追加，否则要加?再追加
+            if (strstr('?', $this->url)){
+                $newUrl .= '&' . $queryString;
+            } else {
+                $newUrl .= '?' . $queryString;
+            }
+            curl_setopt($ch, CURLOPT_URL, $newUrl);
+            Yii::log("Made query ULR: " .$newUrl);
+        }
+        switch (strtoupper($this->method))
+        {
+            case 'POST':
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $queryString);
+                curl_setopt($ch, CURLOPT_URL, $this->url);
+                break;
+            case 'PUT': // 发送文件，必须同时设置inFile和inFileSize
+                curl_setopt($ch, CURLOPT_PUT, true);
+                curl_setopt($ch, CURLOPT_INFILE, $this->inFile);
+                curl_setopt($ch, CURLOPT_INFILESIZE, $this->inFileSize);
+                break;
+            case 'GET':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                break;
+            case 'HEAD':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'HEAD');
+                break;
+            case 'DELETE':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                break;
+            case 'TRACE';
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'TRACE');
+                break;
+            case 'CONNECT':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'CONNECT');
+                break;
+            case 'OPTIONS':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'OPTIONS');
+                break;
+            default:
+                throw new InvalidArgumentException("Method " . $this->method .' of URL ' . $this->url .' is not supported!');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  // 将curl_exec()获取的信息以文件流的形式返回，而不是直接输出。
+    }
+
 
     /**
      * @return string
@@ -90,6 +289,8 @@ class MultiCurl {
             case 'base64json':
                 $json = json_encode($param);
                 return base64_encode($json);
+            case 'json':
+                return json_encode($param);
             case 'query':
                 $queryString = http_build_query($param);
                 return $queryString;
@@ -112,6 +313,8 @@ class MultiCurl {
             case 'base64json':
                 $json = base64_decode($param);
                 return json_decode($json);
+            case 'json':
+                return json_decode($param);
             case 'raw':
             default:
                 return $param;
@@ -119,107 +322,207 @@ class MultiCurl {
     }
 
     /**
-     * @param bool $waitTillEnd 是否需要等到请求结束
-     * @return self
+     * 从Multi-CURL中获取结果
      */
-    public function exec($waitTillEnd=false, $returnResult=false){
-        Yii::log("exec: $waitTillEnd, $returnResult");
-        // init multi-curl and curl and add into multi-curl
-        $this->multiCurl = curl_multi_init();
-        for ($i = 0, $cnt = count($this->urls); $i < $cnt; $i++) {
-            $url = &$this->urls[$i];
-            $ch = curl_init();
-            $url['curl'] = $ch;
-            curl_setopt($ch, CURLOPT_URL, $url['url']);
-            curl_setopt($ch, CURLOPT_HEADER, 0);
-            $queryString = null;
-            if (!empty($url['param'])){
-                $queryString = $this->format($url['param'], $url['format']);
-            }
-            if ($url['method'] == 'POST'){
-                curl_setopt($ch, CURLOPT_POST, 1);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $queryString);
-            } else { // GET
-                if ($queryString != null){
-                    curl_setopt($ch, CURLOPT_URL, $url['url'] . '?' . $queryString);
-                    Yii::log("Made query ULR for GET: " . $url['url'] . '?' . $queryString);
-                }
-            }
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  // 将curl_exec()获取的信息以文件流的形式返回，而不是直接输出。
-            curl_multi_add_handle($this->multiCurl, $ch);
-        }
-
-        // run
-        $this->running = false;
-        do {
-            $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
-        } while($this->mrc == CURLM_CALL_MULTI_PERFORM);
-
-        if ($waitTillEnd){
-            $this->wait();
-        }
-
-        if ($returnResult){
-            return $this->getResults();
-        }
-
+    public function getResultFromMultiCurl(){
+        $contentRaw = curl_multi_getcontent($this->curlHandle);
+        $content = $this->antiFormat($contentRaw, $this->format);
+        $this->resultRaw =  $contentRaw;
+        $this->result = $content;
+        $this->resultInfo = curl_getinfo($this->curlHandle);
+        $this->resultError = curl_error($this->curlHandle);
         return $this;
     }
 
+
     /**
-     * wait until end of the request
-     * @return self
+     * @param mixed $curlHandle
      */
-    public function wait(){
-        Yii::log("wait: running: {$this->running}, mrc: {$this->mrc}");
-        while ($this->running && $this->mrc == CURLM_OK) {
-            if (curl_multi_select($this->multiCurl) != -1){
-                do {
-                    $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
-                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurl}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))");
-                }while($this->mrc == CURLM_CALL_MULTI_PERFORM);
-            }
-        }
-        return $this;
+    public function setCurlHandle($curlHandle)
+    {
+        $this->curlHandle = $curlHandle;
     }
 
     /**
-     * get results of urls
-     * @return array ( array( 'url' => "http://..."
-     *                         'resultRaw' => '...raw result...'
-     *                         'result' => stdClass(...))
+     * @return mixed
      */
-    public function getResults(){
-        foreach ($this->urls as &$url) {
-            $contentRaw = curl_multi_getcontent($url['curl']);
-            $content = $this->antiFormat($contentRaw, $url['format']);
-            $url['resultRaw'] =  $contentRaw;
-            $url['result'] = $content;
-
-        }
-        return $this->urls;
+    public function getCurlHandle()
+    {
+        return $this->curlHandle;
     }
 
     /**
-     * cleanup
+     * @param mixed $url
      */
-    public function cleanup(){
-        foreach ($this->urls as &$url){
-            $ch = $url['curl'];
-            if ($ch != null){
-                curl_close($ch);
-                if ($this->multiCurl != null){
-                    curl_multi_remove_handle($this->multiCurl, $ch);
-                }
-            }
-        }
-        if ($this->multiCurl != null){
-            curl_multi_close($this->multiCurl);
-        }
+    public function setUrl($url)
+    {
+        $this->url = $url;
     }
 
-    public function __destruct(){
-        $this->cleanup();
+    /**
+     * @return mixed
+     */
+    public function getUrl()
+    {
+        return $this->url;
     }
+
+    /**
+     * @param mixed $format
+     */
+    public function setFormat($format)
+    {
+        $this->format = $format;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFormat()
+    {
+        return $this->format;
+    }
+
+    /**
+     * @param mixed $method
+     */
+    public function setMethod($method)
+    {
+        $this->method = $method;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    /**
+     * @param mixed $param
+     */
+    public function setParam($param)
+    {
+        $this->param = $param;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getParam()
+    {
+        return $this->param;
+    }
+
+    /**
+     * @param mixed $result
+     */
+    public function setResult($result)
+    {
+        $this->result = $result;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    /**
+     * @param mixed $resultError
+     */
+    public function setResultError($resultError)
+    {
+        $this->resultError = $resultError;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResultError()
+    {
+        return $this->resultError;
+    }
+
+    /**
+     * @param mixed $resultInfo
+     */
+    public function setResultInfo($resultInfo)
+    {
+        $this->resultInfo = $resultInfo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResultInfo()
+    {
+        return $this->resultInfo;
+    }
+
+    /**
+     * @param mixed $resultRaw
+     */
+    public function setResultRaw($resultRaw)
+    {
+        $this->resultRaw = $resultRaw;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResultRaw()
+    {
+        return $this->resultRaw;
+    }
+
+    /**
+     * @param mixed $inFile
+     */
+    public function setInFile($inFile)
+    {
+        $this->inFile = $inFile;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getInFile()
+    {
+        return $this->inFile;
+    }
+
+    /**
+     * @param mixed $inFileSize
+     */
+    public function setInFileSize($inFileSize)
+    {
+        $this->inFileSize = $inFileSize;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getInFileSize()
+    {
+        return $this->inFileSize;
+    }
+
+    private $url;
+    private $curlHandle;
+    private $param;
+    private $method;
+    private $format;
+    private $resultRaw;
+    private $result;
+    private $resultError;
+    private $resultInfo;
+    private $defaultFormat;
+    private $inFile;
+    private $inFileSize;
+
 }
 
