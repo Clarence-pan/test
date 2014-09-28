@@ -37,18 +37,18 @@ class ArrayLog {
     public $fileSize;
     public $filemtime;
     public $fileName;
+    public function my_filesize(&$file){
+        $oldPos = ftell($file);
+        fseek($file, 0, SEEK_END);
+        $size = ftell($file);
+        fseek($file, $oldPos, SEEK_SET);
+        return $size;
+    }
     public function __construct($fileName){
         $this->file = fopen($fileName, "rb");
         $this->fileName = $fileName;
         $this->fileSize = $this->my_filesize($this->file);
         $this->filemtime = filemtime($fileName);
-    }
-    public function my_filesize($file){
-        $oldPos = ftell($file);
-        fseek($file. 0, SEEK_END);
-        $size = ftell($file);
-        fseek($file, $oldPos, SEEK_SET);
-        return $size;
     }
     public function seek($offset){
         fseek($this->file, $offset);
