@@ -102,8 +102,8 @@ class MultiCurl {
      * @param $dealResultCallback callable - 当收到数据后处理的函数
      * @return self
      */
-    public function wait(callable $dealResultCallback=null){
-        Yii::log("wait: running: {$this->running}, mrc: {$this->mrc}");
+    public function wait($dealResultCallback=null){
+        Yii::log("wait: running: {$this->running}, mrc: {$this->mrc}" . __FUNCTION__);
         while ($this->running && $this->mrc == CURLM_OK) {
             if ($dealResultCallback){
                 $this->tryGetResult($dealResultCallback);
@@ -111,7 +111,7 @@ class MultiCurl {
             if (curl_multi_select($this->multiCurl) != -1){
                 do {
                     $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
-                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurl}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))");
+                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurl}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))" . __FUNCTION__);
                 }while($this->mrc == CURLM_CALL_MULTI_PERFORM);
             }
         }
@@ -125,7 +125,7 @@ class MultiCurl {
      * 尝试获取multi curl的结果，如果获取到，则调用callback来处理结果
      * @param $dealResultCallback
      */
-    public function tryGetResult($dealResultCallback){
+    private function tryGetResult($dealResultCallback){
         while ($done = curl_multi_info_read($this->multiCurl)){
             $curlHandle = $done['handle'];
             $singleCurl = $this->findUrlByCurlHandle($curlHandle);
@@ -283,6 +283,9 @@ class SingleUrl
      */
     public function format($param, $format){
         $format = ($format === null ? $this->getDefaultFormat() : $format);
+        if (!is_string($param)){
+            $param = http_build_query($param);
+        }
         switch ($format){
             case 'base64':
                 return base64_encode($param);
@@ -291,9 +294,6 @@ class SingleUrl
                 return base64_encode($json);
             case 'json':
                 return json_encode($param);
-            case 'query':
-                $queryString = http_build_query($param);
-                return $queryString;
             case 'raw':
             default:
                 return $param;
