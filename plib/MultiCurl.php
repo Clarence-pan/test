@@ -9,7 +9,7 @@
 class MultiCurl {
     private $urls = null;  // array of SingleUrl
     private $defaultFormat = 'base64json';  // or raw
-    private $multiCurl = null;
+    private $multiCurlHandle = null;
     /**
      * @param array $urls  like array( array( 'url' => 'http://test.org/...",
      *                                      "param" => array( 'key' => 'value'),
@@ -23,6 +23,7 @@ class MultiCurl {
         if ($urls != null){
             $this->addUrls($urls);
         }
+        $this->multiCurlHandle = curl_multi_init();
     }
 
     /**
@@ -39,6 +40,7 @@ class MultiCurl {
     public function addUrl($url, array $param=null, $method="GET", $format=null){
         $singleCurl = new SingleUrl($url, $param, $method, $format);
         $this->urls[] = $singleCurl;
+        $singleCurl->addToMultiCurl($this);
         return $this;
     }
 
@@ -59,6 +61,16 @@ class MultiCurl {
         return $this;
     }
 
+    /**
+     * @see curl_multi_setopt
+     * @param $option
+     * @param $value
+     * @return bool
+     */
+    public function setMultiCurlOpt($option, $value){
+        return curl_multi_setopt($this->multiCurlHandle, $option, $value);
+    }
+
 
     /**
      * @param bool $waitTillEnd 是否需要等到请求结束
@@ -66,13 +78,6 @@ class MultiCurl {
      */
     public function exec($waitTillEnd=false, $returnResult=false){
         Yii::log("exec: $waitTillEnd, $returnResult");
-        // init multi-curl and curl and add into multi-curl
-        $this->multiCurl = curl_multi_init();
-        for ($i = 0, $cnt = count($this->urls); $i < $cnt; $i++) {
-            $singleCurl = $this->urls[$i];
-            $singleCurl->init();
-            curl_multi_add_handle($this->multiCurl, $singleCurl->getCurlHandle());
-        }
 
         // run
         $this->running = false;
@@ -83,7 +88,7 @@ class MultiCurl {
          * soon, as that is a signal that it still has local data to send or remote data to receive."
          */
         do {
-            $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
+            $this->mrc = curl_multi_exec($this->multiCurlHandle, $this->running);
         } while($this->mrc == CURLM_CALL_MULTI_PERFORM);
 
         if ($waitTillEnd){
@@ -108,10 +113,10 @@ class MultiCurl {
             if ($dealResultCallback){
                 $this->tryGetResult($dealResultCallback);
             }
-            if (curl_multi_select($this->multiCurl) != -1){
+            if (curl_multi_select($this->multiCurlHandle) != -1){
                 do {
-                    $this->mrc = curl_multi_exec($this->multiCurl, $this->running);
-                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurl}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))" . __FUNCTION__);
+                    $this->mrc = curl_multi_exec($this->multiCurlHandle, $this->running);
+                    Yii::log("wait: {$this->mrc} = curl_multi_exec({$this->multiCurlHandle}, {$this->running})  while (mrc == {CURLM_CALL_MULTI_PERFORM}))" . __FUNCTION__);
                 }while($this->mrc == CURLM_CALL_MULTI_PERFORM);
             }
         }
@@ -126,10 +131,10 @@ class MultiCurl {
      * @param $dealResultCallback
      */
     private function tryGetResult($dealResultCallback){
-        while ($done = curl_multi_info_read($this->multiCurl)){
+        while ($done = curl_multi_info_read($this->multiCurlHandle)){
             $curlHandle = $done['handle'];
             $singleCurl = $this->findUrlByCurlHandle($curlHandle);
-            $singleCurl->getResultFromMultiCurl();
+            $singleCurl->fetchContentFromMultiCurl();
             call_user_func_array($dealResultCallback, array($singleCurl));
         }
     }
@@ -141,7 +146,7 @@ class MultiCurl {
      */
     public function &findUrlByCurlHandle($curlHandle){
         foreach ($this->urls as &$singleCurl) {
-            if ($singleCurl->getCurlHandle() == $curlHandle){
+            if ($singleCurl->getHandle() == $curlHandle){
                 return $singleCurl;
             }
         }
@@ -156,7 +161,7 @@ class MultiCurl {
      */
     public function getResults(){
         foreach ($this->urls as &$singleCurl) {
-            $singleCurl->getResultFromMultiCurl();
+            $singleCurl->fetchContentFromMultiCurl();
         }
         return $this->urls;
     }
@@ -166,17 +171,16 @@ class MultiCurl {
      */
     public function cleanup(){
         foreach ($this->urls as &$singleCurl){
-            $ch = $singleCurl->getCurlHandle();
-            if ($ch != null){
-                curl_close($ch);
-                if ($this->multiCurl != null){
-                    curl_multi_remove_handle($this->multiCurl, $ch);
-                }
-            }
+            $singleCurl->cleanup();
         }
-        if ($this->multiCurl != null){
-            curl_multi_close($this->multiCurl);
+        if ($this->multiCurlHandle != null){
+            curl_multi_close($this->multiCurlHandle);
+            unset($this->multiCurlHandle);
         }
+    }
+
+    public function getHandle(){
+        return $this->multiCurlHandle;
     }
 
     public function __destruct(){
@@ -192,16 +196,20 @@ class SingleUrl
      * @param $param
      * @param $method
      * @param $format
+     * @param $initNow   -- 立即初始化创建CURL句柄，如果传false，则应主动调用@see SingleUrl::init()进行初始化
      */
-    public function __construct($url, $param, $method, $format){
+    public function __construct($url, $param, $method, $format, $initNow=true){
         $this->url = $url;
         $this->param = $param;
         $this->method = $method;
         $this->format = $format;
+        if ($initNow){
+            $this->init();
+        }
     }
 
     /**
-     * 初始化
+     * 初始化,创建CURL句柄
      * @throws InvalidArgumentException
      */
     public function init(){
@@ -324,7 +332,7 @@ class SingleUrl
     /**
      * 从Multi-CURL中获取结果
      */
-    public function getResultFromMultiCurl(){
+    public function fetchContentFromMultiCurl(){
         $contentRaw = curl_multi_getcontent($this->curlHandle);
         $content = $this->antiFormat($contentRaw, $this->format);
         $this->resultRaw =  $contentRaw;
@@ -334,11 +342,21 @@ class SingleUrl
         return $this;
     }
 
+    public function cleanup(){
+        $ch = $this->curlHandle;
+        if ($ch){
+            curl_close($ch);
+        }
+        unset($this->curlHandle);
+
+        $this->removeFromMultiCurl();
+    }
+
 
     /**
      * @param mixed $curlHandle
      */
-    public function setCurlHandle($curlHandle)
+    private function setCurlHandle($curlHandle)
     {
         $this->curlHandle = $curlHandle;
     }
@@ -346,7 +364,7 @@ class SingleUrl
     /**
      * @return mixed
      */
-    public function getCurlHandle()
+    public function getHandle()
     {
         return $this->curlHandle;
     }
@@ -428,13 +446,16 @@ class SingleUrl
      */
     public function getResult()
     {
+        if (empty($this->result)){
+            $this->fetchResult();
+        }
         return $this->result;
     }
 
     /**
      * @param mixed $resultError
      */
-    public function setResultError($resultError)
+    private function setResultError($resultError)
     {
         $this->resultError = $resultError;
     }
@@ -450,7 +471,7 @@ class SingleUrl
     /**
      * @param mixed $resultInfo
      */
-    public function setResultInfo($resultInfo)
+    private function setResultInfo($resultInfo)
     {
         $this->resultInfo = $resultInfo;
     }
@@ -466,7 +487,7 @@ class SingleUrl
     /**
      * @param mixed $resultRaw
      */
-    public function setResultRaw($resultRaw)
+    private function setResultRaw($resultRaw)
     {
         $this->resultRaw = $resultRaw;
     }
@@ -511,6 +532,29 @@ class SingleUrl
         return $this->inFileSize;
     }
 
+    /**
+     * 添加到MultiCurl中去
+     * @param MultiCurl $multiCurl
+     * @return int
+     */
+    public function addToMultiCurl(MultiCurl $multiCurl){
+        $this->multiCurlAddedTo = $multiCurl;
+        return curl_multi_add_handle($multiCurl->getHandle(), $this->getHandle());
+    }
+
+    /**
+     * 从MultiCurl中去除
+     * @return int
+     */
+    public function removeFromMultiCurl(){
+        if (!$this->multiCurlAddedTo){
+            return 0;
+        }
+        $ret = curl_multi_remove_handle($this->multiCurlAddedTo->getHandle(), $this->getHandle());
+        unset($this->multiCurlAddedTo);
+        return $ret;
+    }
+
     private $url;
     private $curlHandle;
     private $param;
@@ -523,6 +567,6 @@ class SingleUrl
     private $defaultFormat;
     private $inFile;
     private $inFileSize;
-
+    private $multiCurlAddedTo;
 }
 
