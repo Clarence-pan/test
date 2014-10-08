@@ -196,27 +196,27 @@ class SingleUrl
      * @param $param
      * @param $method
      * @param $format
-     * @param $initNow   -- 立即初始化创建CURL句柄，如果传false，则应主动调用@see SingleUrl::init()进行初始化
      */
-    public function __construct($url, $param, $method, $format, $initNow=true){
+    public function __construct($url, $param, $method, $format){
         $this->url = $url;
         $this->param = $param;
         $this->method = $method;
         $this->format = $format;
-        if ($initNow){
-            $this->init();
-        }
+        $this->init();
     }
 
     /**
      * 初始化,创建CURL句柄
      * @throws InvalidArgumentException
      */
-    public function init(){
+    private function init(){
         $ch = curl_init();
+        if (!$ch){
+            throw new
+        }
         $this->curlHandle = $ch;
-        curl_setopt($ch, CURLOPT_URL, $this->url);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $this->setOpt(CURLOPT_URL, $this->url);
+        $this->setOpt(CURLOPT_HEADER, 0);
         $queryString = null;
         if (!empty($this->param)){
             $queryString = $this->format($this->param, $this->format);
@@ -229,43 +229,47 @@ class SingleUrl
             } else {
                 $newUrl .= '?' . $queryString;
             }
-            curl_setopt($ch, CURLOPT_URL, $newUrl);
+            $this->setOpt(CURLOPT_URL, $newUrl);
             Yii::log("Made query ULR: " .$newUrl);
         }
         switch (strtoupper($this->method))
         {
             case 'POST':
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $queryString);
-                curl_setopt($ch, CURLOPT_URL, $this->url);
+                $this->setOpt(CURLOPT_POST, true);
+                $this->setOpt(CURLOPT_POSTFIELDS, $queryString);
+                $this->setOpt(CURLOPT_URL, $this->url);
                 break;
             case 'PUT': // 发送文件，必须同时设置inFile和inFileSize
-                curl_setopt($ch, CURLOPT_PUT, true);
-                curl_setopt($ch, CURLOPT_INFILE, $this->inFile);
-                curl_setopt($ch, CURLOPT_INFILESIZE, $this->inFileSize);
+                $this->setOpt(CURLOPT_PUT, true);
+                $this->setOpt(CURLOPT_INFILE, $this->inFile);
+                $this->setOpt(CURLOPT_INFILESIZE, $this->inFileSize);
                 break;
             case 'GET':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                $this->setOpt(CURLOPT_CUSTOMREQUEST, 'GET');
                 break;
             case 'HEAD':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'HEAD');
+                $this->setOpt(CURLOPT_CUSTOMREQUEST, 'HEAD');
                 break;
             case 'DELETE':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                $this->setOpt(CURLOPT_CUSTOMREQUEST, 'DELETE');
                 break;
             case 'TRACE';
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'TRACE');
+                $this->setOpt(CURLOPT_CUSTOMREQUEST, 'TRACE');
                 break;
             case 'CONNECT':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'CONNECT');
+                $this->setOpt(CURLOPT_CUSTOMREQUEST, 'CONNECT');
                 break;
             case 'OPTIONS':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'OPTIONS');
+                $this->setOpt(CURLOPT_CUSTOMREQUEST, 'OPTIONS');
                 break;
             default:
                 throw new InvalidArgumentException("Method " . $this->method .' of URL ' . $this->url .' is not supported!');
         }
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  // 将curl_exec()获取的信息以文件流的形式返回，而不是直接输出。
+        $this->setOpt(CURLOPT_RETURNTRANSFER, true);  // 将curl_exec()获取的信息以文件流的形式返回，而不是直接输出。
+    }
+
+    public function setOpt($option, $value){
+        return curl_setopt($this->curlHandle, $option, $value);
     }
 
 
