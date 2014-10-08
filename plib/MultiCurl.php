@@ -211,9 +211,6 @@ class SingleUrl
      */
     private function init(){
         $ch = curl_init();
-        if (!$ch){
-            throw new
-        }
         $this->curlHandle = $ch;
         $this->setOpt(CURLOPT_URL, $this->url);
         $this->setOpt(CURLOPT_HEADER, 0);
