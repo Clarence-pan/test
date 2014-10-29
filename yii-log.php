@@ -88,7 +88,7 @@ function output_logs($log, $id=100000){
         <ul  class="log">
             <li class="line"><?= $id + 1 ?>:</li>
             <?php foreach ($logline as $key => $logValue): ?>
-                <li class="<?= $key ?>"><?= $logValue ?></li>
+                <li class="<?= $key ?>"><?= htmlspecialchars($logValue) ?></li>
             <?php endforeach; ?>
         </ul>
     <?PHP if ($id % 200 == 0): ?>
