@@ -103,11 +103,7 @@ function output_logs($log, $id=100000){
 <?PHP if(!$_REQUEST["autoAppend"]){ ?>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<!--
 <script type='text/javascript' src='js/jquery.js'></script>
-<script type='text/javascript' src='js/jquery.autocomplete.js'></script>
-<script type="text/javascript" src="js/jquery-ui/jquery-ui.js" >    </script>
--->
 <script type="text/javascript">
     function getGlobal(key){
         var global = (function(){return this;})();
@@ -136,14 +132,7 @@ function output_logs($log, $id=100000){
         return query;
     }
     function refresh(key, value){
-//            $href = window.location.href;
-//            if ($href[$href.length-1] != '?'){
-//                $href = $href + "?";
-//            }
-//            $href = $href + $param;
-//            window.open($href, "_self");
-        var query = buildQuery(key, value);
-        location.replace(query);
+        $("form").append($("<input type='hidden' />").attr('name', key).attr('value', value)).submit();
     }
     function getCurrentParams(){
         var params = {};
