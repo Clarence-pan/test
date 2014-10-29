@@ -9,16 +9,20 @@
 function get_file_path(){
     return $_REQUEST['originalFilePath'];
 }
-define('FRAGMENT_BEGIN', '// !BEGIN: ');
-define('FRAGMENT_END', '// !END: ');
+define('FRAGMENT_BEGIN', '// !BEGIN:');
+define('FRAGMENT_END', '// !END:');
 define('FRAGMENT_PLACE_HOLDER', '// !PLACE_HOLDER: ');
+define('LINE_BREAK', "\r\n");
+function pre_process_line($line){
+    return str_replace("\n", "", str_replace("\r", "", $line));
+}
 
 $actions = array(
     'view' =>
         function () {
             echo "<h>".get_file_path()."</h>";
             echo "<pre>";
-            echo file_get_contents(get_file_path());
+            echo htmlspecialchars(file_get_contents(get_file_path()));
             echo "<pre>";
         },
     'break' =>
@@ -42,28 +46,38 @@ $actions = array(
                 return false;
             };
             for ($i = 0, $n = count($oldFile); $i < $n; $i++){
-                $line = $oldFile[$i];
+                $line = pre_process_line($oldFile[$i]);
+
                 $name = $findName($line, FRAGMENT_BEGIN);
                 if ($name){
+                    echo "Info: find match begin of ".$name."<BR/>";
                     $j = $i;
                     $fragmentContent = '';
-                    for (; $j < $n; $j++){
-                        $line = $oldFile[$j];
+                    for ($j++; $j < $n; $j++){
+                        $line = pre_process_line($oldFile[$j]);
+//                        if (strstr($line, $name)){
+//                            echo $line."<br/>";
+//                        }
                         $matchEnd = $findName($line, FRAGMENT_END);
-                        if ($matchEnd && $end == $name){
+                        if ($matchEnd && $matchEnd == $name){
                             break;
                         }else{
                             $matchEnd = false;
-                            $fragmentContent .= $line . "\n";
+                            $fragmentContent .= $line . LINE_BREAK;
                         }
                     }
                     if ($matchEnd){
                         $fragments[$name] = $fragmentContent;
                         $i = $j;
+                        $newFile .= FRAGMENT_PLACE_HOLDER.$name.LINE_BREAK;
+                        echo "Info: find match end of ".$name."<BR/>";
                         continue;
+                    }else{
+                        echo "Error: cannot find match end of ".$name."<BR/>";
                     }
+
                 }
-                $newFile .= $line . "\n";
+                $newFile .= $line . LINE_BREAK;
             }
 
             foreach ($fragments as $name => $content) {
@@ -89,16 +103,25 @@ $actions = array(
             }
             
             $newFile = $fragments[$filename];
+            echo "before join file length: ".strlen($newFile)."<br/>";
             foreach ($fragments as $key => $value) {
                 if ($key == $filename){
                     continue;
                 }
-                $newFile = str_replace(FRAGMENT_PLACE_HOLDER.$key."\n",
-                                    FRAGMENT_BEGIN.$key."\n".
-                                    $value."\n",
-                                    FRAGMENT_END.$key."\n",
+//                echo FRAGMENT_PLACE_HOLDER.$key.LINE_BREAK.'<br/>'.
+//                    "<pre>".
+//                    FRAGMENT_BEGIN.$key.LINE_BREAK.
+//                    $value.LINE_BREAK.
+//                    FRAGMENT_END.$key.LINE_BREAK.'</pre>';
+                $key = basename($key, '.js');
+
+                $newFile = str_replace(FRAGMENT_PLACE_HOLDER.$key.LINE_BREAK,
+                                    FRAGMENT_BEGIN.$key.LINE_BREAK.
+                                    $value.
+                                    FRAGMENT_END.$key.LINE_BREAK,
                                     $newFile);
             }
+            echo "after join file length: ".strlen($newFile)."<br/>";
 
             $oldFile = file_get_contents(get_file_path());
             file_put_contents(get_file_path().'.bak', $oldFile);
@@ -125,7 +148,7 @@ function run_action($action){
 <!DOCTYPE html>
 <html>
 <head>
-    <script type="text/javascript" src="js/jquery.js" />
+    <script type="text/javascript" src="js/jquery.js" ></script>
     <script type="text/javascript">
         function buildQuery(key, value){
             var query = getCurrentParams();
