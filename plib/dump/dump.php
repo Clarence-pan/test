@@ -15,7 +15,7 @@ namespace plib\dump{
             $result .= "<b>" . $title . ":</b><br/>";
         }
         $result .= "<pre>";
-        $result .= CVarDumper::dumpAsString($var, 10, true);
+        $result .= CVarDumper::dumpAsString($var, 10, false);
         $result .= "</pre>";
         $result .= "<br/>";
         if ($echo) {

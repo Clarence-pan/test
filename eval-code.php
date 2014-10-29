@@ -1,1 +1,1 @@
-<?PHP return ord('%');
+<?PHP return preg_match( 'BEGIN: \S*test\S*', 'BEGIN: test ');

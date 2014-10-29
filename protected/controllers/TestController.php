@@ -21,6 +21,25 @@ function println($msg = ''){
 function tick_handler(){
     echo __FUNCTION__ . " is called <br/>";
 }
+
+class StaticExample{
+    private function __construct(){
+        $this->id = time()*100+rand(0, 99);
+    }
+    private static $_instance = null;
+    public static function  instance(){
+
+        if (self::$_instance == null){
+            self::$_instance = new static();
+        }
+        return self::$_instance;
+    }
+
+    public function dump(){
+        echo __CLASS__.':'.$this->id."\n";
+    }
+}
+
 class TestController extends CController {
     public function actionDir(){
         echo `dir`;
@@ -142,4 +161,10 @@ class TestController extends CController {
     public function actionStart(){
 		require("/start.php");
 	}
+
+
+
+    public function actionStatic(){
+        StaticExample::instance()->dump();
+    }
 }

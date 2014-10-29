@@ -7,7 +7,7 @@
  * Date: 14-9-20
  * Time: 下午3:04
  */
-
+require(dirname(__FILE__).DIRECTORY_SEPARATOR.'dump/dump.php');
 // start test:
 // 1: Test::runTests()
 class Test extends CController {
@@ -67,7 +67,8 @@ class Test extends CController {
 
     }
     public function runOneTest($case){
-        trace("Begin running testcase '$case'...");
+        trace("Begin running testcase '$case'..." .
+             "<a href='http://bb.me/tests/".$this->getTestSuiteName()."/run?case=$case' target='_blank'>(open)</a>" );
         try{
             $this->setResult($case, Test::FAILED);
             call_user_func_array(array($this, 'test' . $case), array());
@@ -117,6 +118,9 @@ class Test extends CController {
     }
     protected function needTraceDetail(){
         return true;
+    }
+    public function getTestSuiteName(){
+        return str_replace('Controller', '', get_class($this));
     }
 }
 

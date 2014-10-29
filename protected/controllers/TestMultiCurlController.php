@@ -132,4 +132,39 @@ class TestMultiCurlController extends  CController {
             echo "CONTENT: " . $result->getResult().' <br>';
         }
     }
+
+
+
+    // 并行请求10个网页，并打印出来
+    public function actionTestMultiCurlInstantGetAndNewOne(){
+        $mc = new MultiCurl();
+        for ($i = 0; $i < 10; $i++ ){
+            $mc->addUrl("http://test/testMultiCurl/longTask", array(
+                'interval' => 300,
+                'times' => 30,
+                'name' => 'Jack'.$i
+            ), 'GET');
+        }
+
+        $mc->exec();
+        $mc->wait(function ($singleCurl) use ($i, $mc){
+            echo "URL: " . $singleCurl->getUrl() .' <br>';
+            echo "CONTENT: " . $singleCurl->getResult().' <br>';
+
+            for (; $i < 20; $i++){
+                $mc->addUrl("http://test/testMultiCurl/longTask", array(
+                    'interval' => 300,
+                    'times' => 30,
+                    'name' => 'Tom-'.$i
+                ), 'GET');
+            }
+        });
+
+        echo "<hr> after all: <br/>";
+        $results = $mc->getResults();
+        foreach ($results as $result) {
+            echo "URL: " . $result->getUrl() .' <br>';
+            echo "CONTENT: " . $result->getResult().' <br>';
+        }
+    }
 } 

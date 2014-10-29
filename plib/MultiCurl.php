@@ -448,7 +448,7 @@ class SingleUrl
     public function getResult()
     {
         if (empty($this->result)){
-            $this->fetchResult();
+            $this->fetchContentFromMultiCurl();
         }
         return $this->result;
     }
