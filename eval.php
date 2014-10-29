@@ -15,7 +15,7 @@
         <br/>
         <input type="submit" value="                                                 EVAL IT                                                        " />
     </form>
-    <?php if ($_REQUEST['e']):   ?>
+    <?php if ($_REQUEST['e'] || strstr($_SERVER['QUERY_STRING'], 'global')):   ?>
         <div id="result">
             <?php
             function my_eval($code){
@@ -30,7 +30,13 @@
             }
 
             ?>
-            <?php $result = my_eval($_REQUEST['e'] . ';'); ?>
+            <?php
+                if ($_REQUEST['e']){
+                    $result = my_eval($_REQUEST['e'] . ';' );
+                }else{
+                    $result = my_eval('dump($GLOBALS);');
+                }
+            ?>
             <h3>Eval Result:</h3>
             <?php   dump($result);           ?>
         </div>
