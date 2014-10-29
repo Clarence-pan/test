@@ -220,7 +220,7 @@ function run_action($action){
             window.scrollTo(0, 0);
         }
     </script>
-    <title>HOSTS</title>
+    <title>FRAGMENTS</title>
 </head>
 <body>
 <form target="_self" action="" id="fm" >
